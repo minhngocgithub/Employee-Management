@@ -1,0 +1,18 @@
+# Node modules
+node_modules/
+dist/
+
+# Backend specific
+backend/node_modules/
+backend/dist/
+backend/.env
+
+# Frontend specific
+frontend/node_modules/
+frontend/.quasar/
+frontend/dist/
+frontend/.env
+
+# OS files
+.DS_Store
+Thumbs.db
