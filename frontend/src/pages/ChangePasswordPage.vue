@@ -95,7 +95,7 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
-import { authApi } from 'src/api/auth.api';
+import { authApi } from 'src/api';
 import { useAuthStore } from 'src/stores/auth.store';
 import type { AxiosError } from 'axios';
 
@@ -130,11 +130,10 @@ async function onSubmit(): Promise<void> {
     authStore.markPasswordChanged();
     $q.notify({
       type: 'positive',
-      message: 'Đổi mật khẩu thành công. Vui lòng đăng nhập lại.',
+      message: 'Đổi mật khẩu thành công.',
     });
 
-    await authStore.logout();
-    await router.replace({ name: 'login' });
+    await router.replace({ name: 'home' });
   } catch (error) {
     $q.notify({ type: 'negative', message: getErrorMessage(error) });
   } finally {

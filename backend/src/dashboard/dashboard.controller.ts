@@ -1,4 +1,5 @@
 import { Controller, Get } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import {
   DashboardService,
   AdminDashboardStats,
@@ -9,6 +10,8 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { AuthenticatedUser } from '../auth/strategies/jwt-payload.interface';
 import { Role } from '../accounts/schema/account.schema';
 
+@ApiTags('Dashboard')
+@ApiBearerAuth('JWT')
 @Controller('dashboard')
 export class DashboardController {
   constructor(private readonly dashboardService: DashboardService) {}
@@ -21,6 +24,9 @@ export class DashboardController {
    */
   @Roles(Role.ADMIN, Role.MANAGER)
   @Get('stats')
+  @ApiOperation({
+    summary: 'Thống kê — Admin (toàn hệ thống) / Manager (phòng ban)',
+  })
   async getStats(
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<AdminDashboardStats | ManagerDashboardStats> {

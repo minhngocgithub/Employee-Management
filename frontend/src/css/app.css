@@ -1,7 +1,6 @@
 /* ============================================================
    EMS Global Styles - Smooth Transitions & Animations
    ============================================================ */
-
 /* Root CSS Variables */
 :root {
   --color-primary: #1976d2;
@@ -11,7 +10,6 @@
   --color-warning: #ff9800;
   --color-error: #f44336;
   --color-info: #2196f3;
-
   --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-base: 300ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
@@ -20,42 +18,31 @@
 /* ============================================================
    Global Transitions & Animations
    ============================================================ */
-
 /* Enable smooth transitions on all interactive elements */
 * {
-  transition: background-color var(--transition-fast),
-              color var(--transition-fast),
-              border-color var(--transition-fast),
-              box-shadow var(--transition-fast),
-              opacity var(--transition-fast);
+  transition: background-color var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast), opacity var(--transition-fast);
 }
 
 /* Buttons */
-button, .q-btn, [role="button"] {
-  transition: background-color var(--transition-base),
-              color var(--transition-base),
-              transform var(--transition-base),
-              box-shadow var(--transition-base),
-              opacity var(--transition-base) !important;
+button, .q-btn, [role=button] {
+  transition: background-color var(--transition-base), color var(--transition-base), transform var(--transition-base), box-shadow var(--transition-base), opacity var(--transition-base) !important;
 }
 
-button:active, .q-btn:active, [role="button"]:active {
+button:active, .q-btn:active, [role=button]:active {
   transform: scale(0.98);
 }
 
 /* Links */
 a {
-  transition: color var(--transition-base),
-              text-decoration var(--transition-base);
+  transition: color var(--transition-base), -webkit-text-decoration var(--transition-base);
+  transition: color var(--transition-base), text-decoration var(--transition-base);
+  transition: color var(--transition-base), text-decoration var(--transition-base), -webkit-text-decoration var(--transition-base);
 }
 
 /* Form Inputs */
 input, textarea, select, .q-field,
 .q-input, .q-select, .q-checkbox, .q-radio, .q-toggle {
-  transition: background-color var(--transition-base),
-              border-color var(--transition-base),
-              box-shadow var(--transition-base),
-              opacity var(--transition-base);
+  transition: background-color var(--transition-base), border-color var(--transition-base), box-shadow var(--transition-base), opacity var(--transition-base);
 }
 
 input:focus, textarea:focus, .q-field__control:focus,
@@ -65,10 +52,8 @@ input:focus, textarea:focus, .q-field__control:focus,
 }
 
 /* Cards */
-.q-card, [role="article"] {
-  transition: transform var(--transition-base),
-              box-shadow var(--transition-base),
-              opacity var(--transition-base);
+.q-card, [role=article] {
+  transition: transform var(--transition-base), box-shadow var(--transition-base), opacity var(--transition-base);
 }
 
 .q-card:hover {
@@ -103,7 +88,6 @@ input:focus, textarea:focus, .q-field__control:focus,
 /* ============================================================
    Slide Animations
    ============================================================ */
-
 @keyframes slideInLeft {
   from {
     opacity: 0;
@@ -114,7 +98,6 @@ input:focus, textarea:focus, .q-field__control:focus,
     transform: translateX(0);
   }
 }
-
 @keyframes slideInRight {
   from {
     opacity: 0;
@@ -125,7 +108,6 @@ input:focus, textarea:focus, .q-field__control:focus,
     transform: translateX(0);
   }
 }
-
 @keyframes slideInUp {
   from {
     opacity: 0;
@@ -136,7 +118,6 @@ input:focus, textarea:focus, .q-field__control:focus,
     transform: translateY(0);
   }
 }
-
 @keyframes slideInDown {
   from {
     opacity: 0;
@@ -147,7 +128,6 @@ input:focus, textarea:focus, .q-field__control:focus,
     transform: translateY(0);
   }
 }
-
 @keyframes slideOutLeft {
   from {
     opacity: 1;
@@ -158,7 +138,6 @@ input:focus, textarea:focus, .q-field__control:focus,
     transform: translateX(-16px);
   }
 }
-
 @keyframes slideOutRight {
   from {
     opacity: 1;
@@ -169,7 +148,6 @@ input:focus, textarea:focus, .q-field__control:focus,
     transform: translateX(16px);
   }
 }
-
 @keyframes slideOutUp {
   from {
     opacity: 1;
@@ -180,7 +158,6 @@ input:focus, textarea:focus, .q-field__control:focus,
     transform: translateY(-16px);
   }
 }
-
 @keyframes slideOutDown {
   from {
     opacity: 1;
@@ -191,11 +168,9 @@ input:focus, textarea:focus, .q-field__control:focus,
     transform: translateY(16px);
   }
 }
-
 /* ============================================================
    Fade Animations
    ============================================================ */
-
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -204,7 +179,6 @@ input:focus, textarea:focus, .q-field__control:focus,
     opacity: 1;
   }
 }
-
 @keyframes fadeOut {
   from {
     opacity: 1;
@@ -213,11 +187,9 @@ input:focus, textarea:focus, .q-field__control:focus,
     opacity: 0;
   }
 }
-
 /* ============================================================
    Scale Animations
    ============================================================ */
-
 @keyframes scaleIn {
   from {
     opacity: 0;
@@ -228,7 +200,6 @@ input:focus, textarea:focus, .q-field__control:focus,
     transform: scale(1);
   }
 }
-
 @keyframes scaleOut {
   from {
     opacity: 1;
@@ -239,11 +210,9 @@ input:focus, textarea:focus, .q-field__control:focus,
     transform: scale(0.95);
   }
 }
-
 /* ============================================================
    Bounce & Pulse Animations
    ============================================================ */
-
 @keyframes bounce {
   0%, 100% {
     transform: translateY(0);
@@ -252,7 +221,6 @@ input:focus, textarea:focus, .q-field__control:focus,
     transform: translateY(-8px);
   }
 }
-
 @keyframes pulse {
   0%, 100% {
     opacity: 1;
@@ -261,7 +229,6 @@ input:focus, textarea:focus, .q-field__control:focus,
     opacity: 0.5;
   }
 }
-
 @keyframes spin {
   from {
     transform: rotate(0deg);
@@ -270,11 +237,9 @@ input:focus, textarea:focus, .q-field__control:focus,
     transform: rotate(360deg);
   }
 }
-
 /* ============================================================
    Utility Classes
    ============================================================ */
-
 /* Animations */
 .animate-slide-in-left {
   animation: slideInLeft var(--transition-base);
@@ -348,7 +313,6 @@ input:focus, textarea:focus, .q-field__control:focus,
 /* ============================================================
    Layout Animations
    ============================================================ */
-
 /* Page container fade-in */
 .page-container {
   animation: fadeIn var(--transition-slow);
@@ -371,14 +335,8 @@ input:focus, textarea:focus, .q-field__control:focus,
 /* ============================================================
    Loading States
    ============================================================ */
-
 .loading-skeleton {
-  background: linear-gradient(
-    90deg,
-    rgba(255, 255, 255, 0.1) 25%,
-    rgba(255, 255, 255, 0.2) 50%,
-    rgba(255, 255, 255, 0.1) 75%
-  );
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.1) 25%, rgba(255, 255, 255, 0.2) 50%, rgba(255, 255, 255, 0.1) 75%);
   background-size: 200% 100%;
   animation: loading 1.5s infinite;
 }
@@ -391,11 +349,9 @@ input:focus, textarea:focus, .q-field__control:focus,
     background-position: -200% 0;
   }
 }
-
 /* ============================================================
    Focus States for Accessibility
    ============================================================ */
-
 button:focus-visible,
 .q-btn:focus-visible,
 a:focus-visible,
@@ -410,7 +366,6 @@ select:focus-visible {
 /* ============================================================
    Responsive Adjustments
    ============================================================ */
-
 @media (prefers-reduced-motion: reduce) {
   * {
     animation-duration: 0.01ms !important;
@@ -418,7 +373,6 @@ select:focus-visible {
     transition-duration: 0.01ms !important;
   }
 }
-
 @media (max-width: 599px) {
   /* Reduce animation duration on mobile for snappier feel */
   :root {
@@ -426,15 +380,12 @@ select:focus-visible {
     --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
   }
 }
-
 /* ============================================================
    Print Styles
    ============================================================ */
-
 @media print {
   * {
     animation: none !important;
     transition: none !important;
   }
-}
-
+}/*# sourceMappingURL=app.css.map */

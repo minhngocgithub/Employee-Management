@@ -9,6 +9,7 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AccountsService, PaginatedResult } from './accounts.service';
 import { CreateAccountDto } from './dto/create-account.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
@@ -23,6 +24,8 @@ import { Role, AccountDocument } from './schema/account.schema';
  * Tất cả routes đều yêu cầu ADMIN.
  * JwtAuthGuard global đã xử lý xác thực.
  */
+@ApiTags('Accounts')
+@ApiBearerAuth('JWT')
 @Roles(Role.ADMIN)
 @Controller('accounts')
 export class AccountsController {

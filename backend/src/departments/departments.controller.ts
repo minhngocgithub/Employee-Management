@@ -10,6 +10,7 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { DepartmentsService, DepartmentTree } from './departments.service';
 import { CreateDepartmentDto } from './dto/create-department.dto';
 import { UpdateDepartmentDto } from './dto/update-department.dto';
@@ -17,6 +18,8 @@ import { Roles } from '../common/decorators/roles.decorator';
 import { Role } from '../accounts/schema/account.schema';
 import { DepartmentDocument } from './schema/department.schema';
 
+@ApiTags('Departments')
+@ApiBearerAuth('JWT')
 @Controller('departments')
 export class DepartmentsController {
   constructor(private readonly departmentsService: DepartmentsService) {}

@@ -171,7 +171,7 @@ export class EmployeesService {
         `Lỗi trong quá trình tạo nhân viên: ${message}`,
       );
     } finally {
-      session.endSession();
+      await session.endSession();
     }
   }
 

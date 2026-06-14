@@ -11,7 +11,13 @@ export enum Role {
 }
 @Schema({ timestamps: true, collection: 'accounts' })
 export class Account {
-  @Prop({ type: String, required: true, unique: true, lowercase: true, trim: true })
+  @Prop({
+    type: String,
+    required: true,
+    unique: true,
+    lowercase: true,
+    trim: true,
+  })
   declare email: string;
 
   @Prop({ type: String, required: true, select: false })
@@ -41,7 +47,6 @@ export class Account {
 }
 export const AccountSchema = SchemaFactory.createForClass(Account);
 
-AccountSchema.index({ email: 1 }, { unique: true });
 AccountSchema.index({ role: 1 });
 AccountSchema.index({ department_id: 1 });
 AccountSchema.index({ employee_id: 1 });
