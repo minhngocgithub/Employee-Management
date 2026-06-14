@@ -13,7 +13,13 @@ export enum DepartmentLevel {
 export class Department {
   @Prop({ type: String, required: true, trim: true })
   declare name: string;
-  @Prop({ type: String, required: true, unique: true, uppercase: true, trim: true })
+  @Prop({
+    type: String,
+    required: true,
+    unique: true,
+    uppercase: true,
+    trim: true,
+  })
   declare code: string;
   @Prop({ type: Number, required: true, enum: DepartmentLevel })
   declare level: DepartmentLevel;
@@ -29,7 +35,6 @@ export class Department {
 }
 export const DepartmentSchema = SchemaFactory.createForClass(Department);
 
-DepartmentSchema.index({ code: 1 }, { unique: true });
 DepartmentSchema.index({ level: 1 });
 DepartmentSchema.index({ parent_id: 1 });
 DepartmentSchema.index({ manager_id: 1 });

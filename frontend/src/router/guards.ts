@@ -1,5 +1,7 @@
 import type { Router } from 'vue-router';
 import { useAuthStore } from 'src/stores/auth.store';
+import { getDefaultRouteName } from 'src/composables/useNavigation';
+
 export function setupRouterGuards(router: Router): void {
   router.beforeEach((to, _from, next) => {
     const authStore = useAuthStore();
@@ -12,7 +14,7 @@ export function setupRouterGuards(router: Router): void {
       if (authStore.mustChangePassword) {
         return next({ name: 'change-password' });
       }
-      return next({ name: 'home' });
+      return next({ name: getDefaultRouteName(authStore.role) });
     }
 
     if (requiresAuth && !authStore.isAuthenticated) {

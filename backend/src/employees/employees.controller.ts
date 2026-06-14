@@ -9,6 +9,7 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { EmployeesService } from './employees.service';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { CreateEmployeeResponseDto } from './dto/create-employee-response.dto';
@@ -20,6 +21,8 @@ import { AuthenticatedUser } from '../auth/strategies/jwt-payload.interface';
 import { Role } from '../accounts/schema/account.schema';
 import { PaginatedResult } from '../accounts/accounts.service';
 
+@ApiTags('Employees')
+@ApiBearerAuth('JWT')
 @Controller('employees')
 export class EmployeesController {
   constructor(private readonly employeesService: EmployeesService) {}

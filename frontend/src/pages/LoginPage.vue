@@ -58,6 +58,17 @@
                 :loading="loading"
               />
             </q-form>
+
+            <div class="text-center q-mt-md">
+              <q-btn
+                flat
+                dense
+                size="sm"
+                color="primary"
+                label="Quên mật khẩu?"
+                :to="{ name: 'forgot-password' }"
+              />
+            </div>
           </q-card-section>
         </q-card>
       </q-page>

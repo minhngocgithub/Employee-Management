@@ -177,24 +177,47 @@ export class AuthService {
       department_id: account.department_id!.toString(),
     };
 
-    // expiresIn yêu cầu kiểu number (giây) theo @nestjs/jwt hiện tại.
-    // Đọc từ env dưới dạng số giây: ACCESS_TOKEN_TTL=900, REFRESH_TOKEN_TTL=604800
-    const accessTtl = this.configService.get<number>('JWT_ACCESS_TTL', 900);
-    const refreshTtl = this.configService.get<number>(
-      'JWT_REFRESH_TTL',
-      604800,
+    const accessTtl = parseInt(
+      this.configService.get<string>('JWT_ACCESS_TTL', '900'),
+      10,
     );
 
-    const [accessToken, refreshToken] = await Promise.all([
-      this.jwtService.signAsync(payload, {
-        secret: this.configService.getOrThrow<string>('JWT_ACCESS_SECRET'),
-        expiresIn: accessTtl,
-      }),
-      this.jwtService.signAsync(payload, {
-        secret: this.configService.getOrThrow<string>('JWT_REFRESH_SECRET'),
-        expiresIn: refreshTtl,
-      }),
-    ]);
+    const refreshTtl = parseInt(
+      this.configService.get<string>('JWT_REFRESH_TTL', '604800'),
+      10,
+    );
+
+    console.log('================ JWT DEBUG ================');
+    console.log('JWT_ACCESS_TTL =', accessTtl);
+    console.log('JWT_REFRESH_TTL =', refreshTtl);
+    console.log('TYPE_ACCESS =', typeof accessTtl);
+    console.log('TYPE_REFRESH =', typeof refreshTtl);
+    console.log(
+      'JWT_ACCESS_SECRET =',
+      this.configService.get('JWT_ACCESS_SECRET'),
+    );
+    console.log(
+      'JWT_REFRESH_SECRET =',
+      this.configService.get('JWT_REFRESH_SECRET'),
+    );
+
+    const accessToken = await this.jwtService.signAsync(payload, {
+      secret: this.configService.getOrThrow<string>('JWT_ACCESS_SECRET'),
+      expiresIn: accessTtl,
+    });
+
+    const refreshToken = await this.jwtService.signAsync(payload, {
+      secret: this.configService.getOrThrow<string>('JWT_REFRESH_SECRET'),
+      expiresIn: refreshTtl,
+    });
+
+    console.log('ACCESS TOKEN GENERATED');
+    console.log(accessToken);
+
+    console.log('REFRESH TOKEN GENERATED');
+    console.log(refreshToken);
+
+    console.log('==========================================');
 
     return { accessToken, refreshToken };
   }
