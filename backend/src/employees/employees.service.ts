@@ -202,7 +202,7 @@ export class EmployeesService {
     const [data, total] = await Promise.all([
       this.employeeModel
         .find(filter)
-        .populate('account_id', 'email')   // chỉ lấy field email, bỏ password_hash/token
+        .populate('account_id', 'email') // chỉ lấy field email, bỏ password_hash/token
         .skip(skip)
         .limit(limit)
         .sort({ createdAt: -1 })
