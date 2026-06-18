@@ -20,6 +20,10 @@ export class UpdateDepartmentDto {
   manager_id?: string | null;
 
   @IsOptional()
+  @IsMongoId({ message: 'acting_manager_id không hợp lệ' })
+  acting_manager_id?: string | null;
+
+  @IsOptional()
   @IsBoolean()
   is_active?: boolean;
 }

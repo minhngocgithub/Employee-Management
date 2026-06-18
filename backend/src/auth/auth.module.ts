@@ -8,7 +8,10 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
 import { Account, AccountSchema } from '../accounts/schema/account.schema';
 import { LoginHistoryModule } from '../login-history/login-history.module';
-
+import {
+  Department,
+  DepartmentSchema,
+} from '../departments/schema/department.schema';
 @Module({
   imports: [
     PassportModule,
@@ -16,6 +19,9 @@ import { LoginHistoryModule } from '../login-history/login-history.module';
     // để hỗ trợ 2 secret khác nhau (access vs refresh)
     JwtModule.register({}),
     MongooseModule.forFeature([{ name: Account.name, schema: AccountSchema }]),
+    MongooseModule.forFeature([
+      { name: Department.name, schema: DepartmentSchema },
+    ]),
     LoginHistoryModule,
   ],
   controllers: [AuthController],

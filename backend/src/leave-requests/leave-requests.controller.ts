@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -12,6 +13,7 @@ import {
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { LeaveRequestsService } from './leave-requests.service';
 import { CreateLeaveRequestDto } from './dto/create-leave-request.dto';
+import { UpdateLeaveRequestDto } from './dto/update-leave-request.dto';
 import { ReviewLeaveRequestDto } from './dto/review-leave-request.dto';
 import { QueryLeaveRequestDto } from './dto/query-leave-request.dto';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
@@ -71,6 +73,33 @@ export class LeaveRequestsController {
   ): Promise<unknown> {
     return this.leaveRequestsService.review(id, dto, user);
   }
+  /**
+   * PATCH /leave-requests/:id
+   * Update leave request (only creator, only PENDING status)
+   */
+  @Patch(':id')
+  @HttpCode(HttpStatus.OK)
+  async update(
+    @Param('id') id: string,
+    @Body() dto: UpdateLeaveRequestDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<unknown> {
+    return this.leaveRequestsService.update(id, dto, user);
+  }
+
+  /**
+   * DELETE /leave-requests/:id
+   * Delete leave request (only creator, only PENDING status)
+   */
+  @Delete(':id')
+  @HttpCode(HttpStatus.OK)
+  async delete(
+    @Param('id') id: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<{ message: string }> {
+    return this.leaveRequestsService.delete(id, user);
+  }
+
   /**
    * PATCH /leave-requests/:id/cancel
    * Người tạo đơn hoặc Admin hủy đơn PENDING.

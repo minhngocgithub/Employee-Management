@@ -14,9 +14,12 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { DepartmentsService, DepartmentTree } from './departments.service';
 import { CreateDepartmentDto } from './dto/create-department.dto';
 import { UpdateDepartmentDto } from './dto/update-department.dto';
+import { SetActingManagerDto } from './dto/set-acting-manager.dto';
 import { Roles } from '../common/decorators/roles.decorator';
 import { Role } from '../accounts/schema/account.schema';
 import { DepartmentDocument } from './schema/department.schema';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { AuthenticatedUser } from '../auth/strategies/jwt-payload.interface';
 
 @ApiTags('Departments')
 @ApiBearerAuth('JWT')
@@ -44,8 +47,9 @@ export class DepartmentsController {
   @Get()
   async findAll(
     @Query('includeInactive') includeInactive?: string,
+    @Query('search') search?: string,
   ): Promise<DepartmentDocument[]> {
-    return this.departmentsService.findAll(includeInactive === 'true');
+    return this.departmentsService.findAll(includeInactive === 'true', search);
   }
 
   /**
@@ -102,6 +106,33 @@ export class DepartmentsController {
     @Body('manager_id') managerId: string | null,
   ): Promise<DepartmentDocument> {
     return this.departmentsService.assignManager(id, managerId);
+  }
+
+  /**
+   * PATCH /departments/:id/acting-manager
+   * Gán / gỡ người được ủy quyền tạm thời.
+   * - Admin: luôn được
+   * - Manager L3: tự ủy quyền cho phòng mình (cần đơn nghỉ approved)
+   * - Manager L2: ủy quyền cho dept L3 con nếu chưa có acting
+   */
+  @Roles(Role.ADMIN, Role.MANAGER)
+  @Patch(':id/acting-manager')
+  async assignActingManager(
+    @Param('id') id: string,
+    @Body() dto: SetActingManagerDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<DepartmentDocument> {
+    return this.departmentsService.assignActingManager(id, dto, user);
+  }
+
+  /**
+   * GET /departments/:id/employees
+   * Get all employees in a department
+   */
+  @Get(':id/employees')
+  @ApiBearerAuth('JWT')
+  async getEmployeesByDepartment(@Param('id') id: string) {
+    return this.departmentsService.getEmployeesByDepartment(id);
   }
 
   /**

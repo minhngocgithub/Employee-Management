@@ -34,7 +34,8 @@ import { MailService } from '../mail/mail.service';
 
 type LeanEmployee = {
   _id: Types.ObjectId;
-  account_id: Types.ObjectId;
+  // Sau populate: account_id là object { _id, email }, không còn là raw ObjectId
+  account_id: { _id: Types.ObjectId; email: string } | Types.ObjectId;
   full_name: string;
   personal_email: string;
   phone?: string | null;
@@ -201,6 +202,7 @@ export class EmployeesService {
     const [data, total] = await Promise.all([
       this.employeeModel
         .find(filter)
+        .populate('account_id', 'email')   // chỉ lấy field email, bỏ password_hash/token
         .skip(skip)
         .limit(limit)
         .sort({ createdAt: -1 })
@@ -293,9 +295,40 @@ export class EmployeesService {
       throw new BadRequestException('Nhân viên đã ở trạng thái nghỉ việc');
     }
 
+    // Set end_date to current time (when admin clicked resign)
+    const now = new Date();
+    now.setUTCHours(0, 0, 0, 0); // Midnight UTC for consistency with join_date
+
     employee.status = EmployeeStatus.RESIGNED;
+    employee.end_date = now;
     await employee.save();
 
+    // Also disable the account (user cannot login anymore)
+    await this.accountModel.findByIdAndUpdate(employee.account_id, {
+      is_active: false,
+    });
+
+    return employee.toObject() as unknown as LeanEmployee;
+  }
+  async toggleStatus(id: string): Promise<LeanEmployee> {
+    this.assertValidObjectId(id, 'id');
+
+    const employee = await this.employeeModel.findById(id);
+    if (!employee) {
+      throw new NotFoundException('Không tìm thấy nhân viên');
+    }
+
+    if (employee.status === EmployeeStatus.RESIGNED) {
+      employee.status = EmployeeStatus.ACTIVE;
+    } else if (employee.status === EmployeeStatus.ACTIVE) {
+      employee.status = EmployeeStatus.RESIGNED;
+    } else {
+      throw new BadRequestException(
+        'Chỉ có thể chuyển đổi giữa trạng thái ACTIVE và RESIGNED',
+      );
+    }
+
+    await employee.save();
     return employee.toObject() as unknown as LeanEmployee;
   }
 

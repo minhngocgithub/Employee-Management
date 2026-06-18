@@ -7,6 +7,8 @@ export interface AuthUser {
   department_id: string;
   employee_id: string | null;
   must_change_password: boolean;
+  /** true nếu đang được ủy quyền tạm thời */
+  is_acting_manager: boolean;
 }
 
 export interface TokenResponse {

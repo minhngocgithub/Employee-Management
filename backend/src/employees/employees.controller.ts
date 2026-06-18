@@ -102,4 +102,15 @@ export class EmployeesController {
   async resign(@Param('id') id: string): Promise<unknown> {
     return this.employeesService.resign(id);
   }
+
+  /**
+   * PATCH /employees/:id/toggle-status
+   * Toggle employee status between ACTIVE and RESIGNED (allows reactivation)
+   */
+  @Roles(Role.ADMIN, Role.HR)
+  @Patch(':id/toggle-status')
+  @HttpCode(HttpStatus.OK)
+  async toggleStatus(@Param('id') id: string): Promise<unknown> {
+    return this.employeesService.toggleStatus(id);
+  }
 }

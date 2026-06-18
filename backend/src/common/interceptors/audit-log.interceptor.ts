@@ -104,7 +104,9 @@ export class AuditLogInterceptor implements NestInterceptor {
    * /leave-requests/123   → LEAVE_REQUEST
    */
   private resolveEntity(path: string): AuditEntity | null {
-    const firstSegment = path.replace(/^\//, '').split('/')[0] ?? '';
+    // Bỏ global prefix /api nếu có, sau đó lấy segment đầu
+    const stripped = path.replace(/^\/api\//, '').replace(/^\//, '');
+    const firstSegment = stripped.split('/')[0] ?? '';
     return PATH_ENTITY_MAP[firstSegment] ?? null;
   }
 

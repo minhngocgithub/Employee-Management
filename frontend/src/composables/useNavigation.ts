@@ -5,7 +5,7 @@ export interface NavItem {
   label: string;
   icon: string;
   to: { name: string };
-  roles: Role[];
+  roles: string[]; // Các role được phép truy cập
 }
 
 export const NAV_ITEMS: NavItem[] = [
@@ -45,24 +45,47 @@ export const NAV_ITEMS: NavItem[] = [
     roles: ['admin', 'manager', 'hr'],
   },
   {
+    name: 'my-leave-requests',
+    label: 'Đơn nghỉ của tôi',
+    icon: 'event_available',
+    to: { name: 'my-leave-requests' },
+    roles: ['employee', 'manager', 'hr'],
+  },
+  {
     name: 'leave-requests',
-    label: 'Đơn xin nghỉ phép',
+    label: 'Duyệt đơn nghỉ phép',
     icon: 'event_note',
     to: { name: 'leave-requests' },
-    roles: ['admin', 'manager', 'hr', 'employee'],
+    roles: ['admin', 'manager', 'hr'],
   },
   {
     name: 'audit-logs',
     label: 'Nhật ký hoạt động',
-    icon: 'history',
+    icon: 'manage_search',
     to: { name: 'audit-logs' },
+    roles: ['admin'],
+  },
+  {
+    name: 'login-history',
+    label: 'Lịch sử đăng nhập',
+    icon: 'login',
+    to: { name: 'login-history' },
     roles: ['admin'],
   },
 ];
 
-export function getNavItemsForRole(role: Role | null): NavItem[] {
+export function getNavItemsForRole(
+  role: Role | null,
+  isActingManager = false,
+): NavItem[] {
   if (!role) return [];
-  return NAV_ITEMS.filter((item) => item.roles.includes(role));
+  const normalizedRole = role.toLowerCase() as Role;
+  return NAV_ITEMS.filter((item) => {
+    if (item.roles.includes(normalizedRole)) return true;
+    // Acting manager (role=employee) được thấy menu duyệt đơn
+    if (isActingManager && item.name === 'leave-requests') return true;
+    return false;
+  });
 }
 
 export function getDefaultRouteName(role: Role | null): string {

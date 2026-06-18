@@ -10,6 +10,10 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import { Account, AccountDocument } from '../accounts/schema/account.schema';
+import {
+  Department,
+  DepartmentDocument,
+} from '../departments/schema/department.schema';
 import { LoginHistoryService } from '../login-history/login-history.service';
 import { LoginAction } from '../login-history/schema/login-history.schema';
 import { LoginDto } from './dto/login.dto';
@@ -27,6 +31,8 @@ export class AuthService {
   constructor(
     @InjectModel(Account.name)
     private readonly accountModel: Model<AccountDocument>,
+    @InjectModel(Department.name)
+    private readonly departmentModel: Model<DepartmentDocument>,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly loginHistoryService: LoginHistoryService,
@@ -60,7 +66,14 @@ export class AuthService {
       throw new UnauthorizedException('Email hoặc mật khẩu không đúng');
     }
 
-    const { accessToken, refreshToken } = await this.generateTokens(account);
+    const isActingManager = await this.checkIsActingManager(
+      account._id.toString(),
+    );
+
+    const { accessToken, refreshToken } = await this.generateTokens(
+      account,
+      isActingManager,
+    );
 
     const refreshTokenHash = await bcrypt.hash(refreshToken, 10);
     await this.accountModel.findByIdAndUpdate(account._id, {
@@ -77,7 +90,7 @@ export class AuthService {
     return {
       tokenResponse: {
         accessToken,
-        user: this.buildUserInfo(account),
+        user: this.buildUserInfo(account, isActingManager),
       },
       refreshToken,
     };
@@ -117,14 +130,24 @@ export class AuthService {
       );
     }
 
-    const { accessToken, refreshToken } = await this.generateTokens(account);
+    const isActingManager = await this.checkIsActingManager(
+      account._id.toString(),
+    );
+
+    const { accessToken, refreshToken } = await this.generateTokens(
+      account,
+      isActingManager,
+    );
     const refreshTokenHash = await bcrypt.hash(refreshToken, 10);
     await this.accountModel.findByIdAndUpdate(accountId, {
       refresh_token_hash: refreshTokenHash,
     });
 
     return {
-      tokenResponse: { accessToken, user: this.buildUserInfo(account) },
+      tokenResponse: {
+        accessToken,
+        user: this.buildUserInfo(account, isActingManager),
+      },
       refreshToken,
     };
   }
@@ -169,12 +192,14 @@ export class AuthService {
 
   private async generateTokens(
     account: LeanAccount,
+    isActingManager: boolean,
   ): Promise<{ accessToken: string; refreshToken: string }> {
     const payload: JwtPayload = {
       sub: account._id.toString(),
       email: account.email,
       role: account.role,
       department_id: account.department_id!.toString(),
+      is_acting_manager: isActingManager,
     };
 
     const accessTtl = parseInt(
@@ -222,7 +247,10 @@ export class AuthService {
     return { accessToken, refreshToken };
   }
 
-  private buildUserInfo(account: LeanAccount): TokenResponseDto['user'] {
+  private buildUserInfo(
+    account: LeanAccount,
+    isActingManager = false,
+  ): TokenResponseDto['user'] & { is_acting_manager: boolean } {
     return {
       id: account._id.toString(),
       email: account.email,
@@ -230,6 +258,23 @@ export class AuthService {
       department_id: account.department_id!.toString(),
       employee_id: account.employee_id?.toString() ?? null,
       must_change_password: account.is_first_login === true,
+      is_acting_manager: isActingManager,
     };
+  }
+
+  /**
+   * Kiểm tra account có đang là acting_manager_id của bất kỳ dept nào không.
+   * acting_until phải null (không giới hạn) hoặc >= hôm nay.
+   */
+  private async checkIsActingManager(accountId: string): Promise<boolean> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const dept = await this.departmentModel
+      .findOne({
+        acting_manager_id: accountId,
+        $or: [{ acting_until: null }, { acting_until: { $gte: today } }],
+      })
+      .lean();
+    return !!dept;
   }
 }

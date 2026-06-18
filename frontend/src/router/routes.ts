@@ -54,6 +54,12 @@ const routes: RouteRecordRaw[] = [
         meta: { roles: ['admin', 'manager'] },
       },
       {
+        path: 'my-leave-requests',
+        name: 'my-leave-requests',
+        component: () => import('pages/leave-request/MyLeaveRequestsPage.vue'),
+        meta: { roles: ['employee', 'manager', 'hr'] },
+      },
+      {
         path: 'leave-requests',
         name: 'leave-requests',
         component: () => import('pages/leave-request/LeaveRequestsPage.vue'),
@@ -62,19 +68,13 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'audit-logs',
         name: 'audit-logs',
-        component: () => import('pages/ErrorNotFound.vue'),
+        component: () => import('pages/audit-log/AuditLogsPage.vue'),
         meta: { roles: ['admin'] },
       },
       {
-        path: 'create-employee',
-        name: 'create-employee',
-        component: () => import('pages/ErrorNotFound.vue'),
-        meta: { roles: ['admin', 'hr'] },
-      },
-      {
-        path: 'create-department',
-        name: 'create-department',
-        component: () => import('pages/ErrorNotFound.vue'),
+        path: 'login-history',
+        name: 'login-history',
+        component: () => import('src/pages/login-history/LoginHistoryPage.vue'),
         meta: { roles: ['admin'] },
       },
       {

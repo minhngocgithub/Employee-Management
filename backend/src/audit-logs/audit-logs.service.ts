@@ -22,7 +22,17 @@ export interface CreateAuditLogParams {
 
 type LeanAuditLog = {
   _id: Types.ObjectId;
-  actor_id: Types.ObjectId;
+
+  actor_id: {
+    _id: Types.ObjectId;
+
+    employee_id: {
+      _id: Types.ObjectId;
+      employee_code: string;
+      full_name: string;
+    } | null;
+  };
+
   action: AuditAction;
   entity: AuditEntity;
   entity_id: Types.ObjectId;
@@ -95,6 +105,14 @@ export class AuditLogsService {
     const [data, total] = await Promise.all([
       this.auditLogModel
         .find(filter)
+        .populate({
+          path: 'actor_id',
+          select: 'employee_id',
+          populate: {
+            path: 'employee_id',
+            select: 'employee_code full_name',
+          },
+        })
         .skip(skip)
         .limit(limit)
         .sort({ created_at: -1 })

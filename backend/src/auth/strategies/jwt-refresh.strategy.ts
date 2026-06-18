@@ -82,6 +82,7 @@ export class JwtRefreshStrategy extends PassportStrategy(
       email: payload.email,
       role: payload.role,
       department_id: payload.department_id,
+      is_acting_manager: payload.is_acting_manager ?? false,
     };
   }
 }

@@ -100,7 +100,6 @@ const levelOptions = [
   { label: 'Cấp 2 — Ban (Board)',        value: 2 },
   { label: 'Cấp 3 — Phòng (Department)', value: 3 },
 ]
-
 // Chỉ khai báo field nào DTO backend cần: name, code, level, parent_id, manager_id
 const form = ref<{
   name: string

@@ -10,9 +10,20 @@ import {
   Department,
   DepartmentDocument,
   DepartmentLevel,
-} from './schema/department.schema';
-import { CreateDepartmentDto } from './dto/create-department.dto';
-import { UpdateDepartmentDto } from './dto/update-department.dto';
+} from '../departments/schema/department.schema';
+import {
+  Employee,
+  EmployeeDocument,
+  EmployeeStatus,
+} from '../employees/schema/employee.schema';
+import {
+  Account,
+  AccountDocument,
+  Role,
+} from '../accounts/schema/account.schema';
+import { CreateDepartmentDto } from '../departments/dto/create-department.dto';
+import { UpdateDepartmentDto } from '../departments/dto/update-department.dto';
+import { SetActingManagerDto } from '../departments/dto/set-acting-manager.dto';
 
 export interface DepartmentTree extends Omit<Department, '_id'> {
   _id: Types.ObjectId;
@@ -24,12 +35,15 @@ export class DepartmentsService {
   constructor(
     @InjectModel(Department.name)
     private readonly departmentModel: Model<DepartmentDocument>,
+    @InjectModel(Employee.name)
+    private readonly employeeModel: Model<EmployeeDocument>,
+    @InjectModel(Account.name)
+    private readonly accountModel: Model<AccountDocument>,
   ) {}
 
   // ─── Create ───────────────────────────────────────────────────────────────
 
   async create(dto: CreateDepartmentDto): Promise<DepartmentDocument> {
-    // Kiểm tra mã phòng ban trùng
     const exists = await this.departmentModel
       .findOne({ code: dto.code.toUpperCase() })
       .lean();
@@ -37,7 +51,6 @@ export class DepartmentsService {
       throw new ConflictException(`Mã phòng ban '${dto.code}' đã tồn tại`);
     }
 
-    // Validate hierarchy rules
     await this.validateHierarchy(dto.level, dto.parent_id ?? null);
 
     const department = await this.departmentModel.create({
@@ -54,8 +67,33 @@ export class DepartmentsService {
 
   // ─── FindAll (flat list) ──────────────────────────────────────────────────
 
-  async findAll(includeInactive = false): Promise<DepartmentDocument[]> {
-    const filter = includeInactive ? {} : { is_active: true };
+  async findAll(
+    includeInactive = false,
+    search?: string,
+  ): Promise<DepartmentDocument[]> {
+    const filter: Record<string, any> = {};
+
+    if (!includeInactive) {
+      filter.is_active = true;
+    }
+
+    if (search?.trim()) {
+      filter.$or = [
+        {
+          name: {
+            $regex: search.trim(),
+            $options: 'i',
+          },
+        },
+        {
+          code: {
+            $regex: search.trim(),
+            $options: 'i',
+          },
+        },
+      ];
+    }
+
     return this.departmentModel
       .find(filter)
       .sort({ level: 1, name: 1 })
@@ -119,6 +157,30 @@ export class DepartmentsService {
       dept.manager_id = dto.manager_id
         ? new Types.ObjectId(dto.manager_id)
         : null;
+
+      // Sử dụng String() giúp an toàn hơn .toString() khi kiểu dữ liệu chưa phân giải rõ ràng
+      const actingManagerIdStr = dept.acting_manager_id
+        ? String(dept.acting_manager_id)
+        : null;
+      const managerIdStr = dept.manager_id ? String(dept.manager_id) : null;
+
+      if (!dept.manager_id || actingManagerIdStr === managerIdStr) {
+        dept.acting_manager_id = null;
+      }
+    }
+
+    if (dto.acting_manager_id !== undefined) {
+      if (dto.acting_manager_id === null) {
+        dept.acting_manager_id = null;
+      } else {
+        this.assertValidObjectId(dto.acting_manager_id);
+        if (String(dto.acting_manager_id) === String(dept.manager_id)) {
+          throw new BadRequestException(
+            'Người được ủy quyền phải khác manager hiện tại',
+          );
+        }
+        dept.acting_manager_id = new Types.ObjectId(dto.acting_manager_id);
+      }
     }
 
     await dept.save();
@@ -138,10 +200,206 @@ export class DepartmentsService {
       throw new NotFoundException('Không tìm thấy phòng ban');
     }
 
-    dept.manager_id = managerId ? new Types.ObjectId(managerId) : null;
-    await dept.save();
+    // ── Gỡ manager cũ: reset position + role → employee ──
+    if (dept.manager_id) {
+      const oldManagerAccountId =
+        dept.manager_id instanceof Types.ObjectId
+          ? dept.manager_id
+          : new Types.ObjectId(dept.manager_id);
 
+      const oldEmployee = await this.employeeModel.findOne({
+        account_id: oldManagerAccountId,
+      });
+      if (oldEmployee) {
+        oldEmployee.position = null;
+        await oldEmployee.save();
+      }
+
+      // Đổi role về employee
+      await this.accountModel.findByIdAndUpdate(oldManagerAccountId, {
+        role: Role.EMPLOYEE,
+      });
+    }
+
+    if (managerId) {
+      this.assertValidObjectId(managerId);
+      const newManagerId = new Types.ObjectId(managerId);
+
+      const newEmployee = await this.employeeModel.findOne({
+        account_id: newManagerId,
+        department_id: new Types.ObjectId(departmentId),
+        status: EmployeeStatus.ACTIVE,
+      });
+
+      if (!newEmployee) {
+        throw new BadRequestException(
+          'Nhân viên này không thuộc phòng ban hoặc đã bị vô hiệu hóa. Vui lòng chỉ gán Manager từ nhân viên hoạt động của phòng ban.',
+        );
+      }
+
+      newEmployee.position = `Trưởng phòng ${dept.name}`;
+      await newEmployee.save();
+      dept.manager_id = newManagerId;
+
+      // Đổi role → manager
+      await this.accountModel.findByIdAndUpdate(newManagerId, {
+        role: Role.MANAGER,
+      });
+
+      // Nếu acting manager trùng với manager mới → xóa acting
+      const actingIdStr = dept.acting_manager_id
+        ? String(dept.acting_manager_id)
+        : null;
+      if (actingIdStr === String(newManagerId)) {
+        dept.acting_manager_id = null;
+      }
+    } else {
+      dept.manager_id = null;
+      dept.acting_manager_id = null;
+    }
+
+    return await dept.save();
+  }
+
+  // ─── Assign acting manager ────────────────────────────────────────────────
+
+  async assignActingManager(
+    departmentId: string,
+    dto: SetActingManagerDto,
+    requester: { id: string; role: string; department_id: string },
+  ): Promise<DepartmentDocument> {
+    this.assertValidObjectId(departmentId);
+
+    const dept = await this.departmentModel.findById(departmentId);
+    if (!dept) throw new NotFoundException('Không tìm thấy phòng ban');
+
+    // ── Kiểm tra quyền set acting manager ──
+    await this.assertCanSetActingManager(dept, requester);
+
+    if (dto.acting_manager_id === null) {
+      // Xóa ủy quyền
+      dept.acting_manager_id = null;
+      dept.acting_until = null;
+      await dept.save();
+      return dept.toObject() as DepartmentDocument;
+    }
+
+    this.assertValidObjectId(dto.acting_manager_id);
+
+    if (!dept.manager_id) {
+      throw new BadRequestException(
+        'Phòng ban chưa có manager, không thể ủy quyền tạm thời',
+      );
+    }
+
+    const actingId = new Types.ObjectId(dto.acting_manager_id);
+
+    if (String(actingId) === String(dept.manager_id)) {
+      throw new BadRequestException(
+        'Người được ủy quyền phải khác manager hiện tại',
+      );
+    }
+
+    // Acting manager phải là nhân viên active trong phòng ban
+    const employee = await this.employeeModel.findOne({
+      account_id: actingId,
+      department_id: dept._id,
+      status: EmployeeStatus.ACTIVE,
+    });
+    if (!employee) {
+      throw new BadRequestException(
+        'Nhân viên này không thuộc phòng ban hoặc đã bị vô hiệu hóa',
+      );
+    }
+
+    dept.acting_manager_id = actingId;
+
+    // acting_until do người dùng truyền vào — null = không tự hết hạn
+    dept.acting_until = dto.acting_until ? new Date(dto.acting_until) : null;
+
+    await dept.save();
     return dept.toObject() as DepartmentDocument;
+  }
+
+  /**
+   * Kiểm tra requester có quyền set acting manager cho dept không.
+   *
+   * - Admin: luôn được
+   * - Manager L3: chỉ set cho phòng mình, phải có đơn nghỉ approved
+   * - Manager L2: set cho dept L3 con nếu L3 chưa có acting manager
+   */
+  private async assertCanSetActingManager(
+    dept: DepartmentDocument,
+    requester: { id: string; role: string; department_id: string },
+  ): Promise<void> {
+    if (requester.role === 'admin') return;
+
+    if (requester.role !== 'manager') {
+      throw new BadRequestException(
+        'Chỉ Manager hoặc Admin mới có thể ủy quyền',
+      );
+    }
+
+    const deptId = String((dept as unknown as { _id: Types.ObjectId })._id);
+
+    // Manager L3: chỉ set cho phòng mình
+    if (dept.level === DepartmentLevel.DEPARTMENT) {
+      if (requester.department_id !== deptId) {
+        throw new BadRequestException(
+          'Bạn chỉ có thể ủy quyền cho phòng ban của mình',
+        );
+      }
+      return; // đơn nghỉ sẽ được check khi set acting_until
+    }
+
+    // Manager L2: chỉ set cho dept L3 là con trực tiếp của mình
+    // (dept.level !== DEPARTMENT đã được đảm bảo bởi guard trên)
+
+    const requesterDept = await this.departmentModel
+      .findOne({ manager_id: new Types.ObjectId(requester.id) })
+      .select('_id level')
+      .lean<{ _id: Types.ObjectId; level: number }>();
+
+    if (!requesterDept) {
+      throw new BadRequestException('Không tìm thấy phòng ban của bạn');
+    }
+
+    // Kiểm tra dept cần ủy quyền có phải con của requester dept không
+    const isChild = String(dept.parent_id) === String(requesterDept._id);
+    if (!isChild) {
+      throw new BadRequestException(
+        'Bạn chỉ có thể ủy quyền cho phòng ban cấp dưới của mình',
+      );
+    }
+
+    // L2 chỉ set nếu L3 chưa có acting manager
+    if (dept.acting_manager_id) {
+      throw new BadRequestException(
+        'Phòng ban này đã có người được ủy quyền. Manager phòng ban có thể tự thay đổi nếu cần',
+      );
+    }
+  }
+
+  // ─── Get employees by department ──────────────────────────────────────────
+
+  async getEmployeesByDepartment(
+    departmentId: string,
+  ): Promise<EmployeeDocument[]> {
+    this.assertValidObjectId(departmentId);
+
+    const dept = await this.departmentModel.findById(departmentId);
+    if (!dept) {
+      throw new NotFoundException('Không tìm thấy phòng ban');
+    }
+
+    return this.employeeModel
+      .find({
+        department_id: new Types.ObjectId(departmentId),
+        status: EmployeeStatus.ACTIVE,
+      })
+      .populate('account_id', 'email')
+      .sort({ full_name: 1 })
+      .lean<EmployeeDocument[]>();
   }
 
   // ─── Delete (soft delete) ─────────────────────────────────────────────────
@@ -154,7 +412,6 @@ export class DepartmentsService {
       throw new NotFoundException('Không tìm thấy phòng ban');
     }
 
-    // Không xóa nếu còn phòng ban con active
     const hasChildren = await this.departmentModel.exists({
       parent_id: new Types.ObjectId(id),
       is_active: true,
@@ -165,7 +422,6 @@ export class DepartmentsService {
       );
     }
 
-    // Không xóa phòng ban COMPANY (root)
     if (dept.level === DepartmentLevel.COMPANY) {
       throw new BadRequestException('Không thể xóa phòng ban cấp Công ty');
     }
@@ -176,18 +432,11 @@ export class DepartmentsService {
 
   // ─── Private helpers ──────────────────────────────────────────────────────
 
-  /**
-   * Validate quy tắc cây 3 cấp:
-   * - COMPANY (1): không có parent
-   * - BOARD (2): parent phải là COMPANY
-   * - DEPARTMENT (3): parent phải là BOARD
-   */
   private async validateHierarchy(
     level: DepartmentLevel,
     parentId: string | null,
   ): Promise<void> {
     if (level === DepartmentLevel.COMPANY) {
-      // Chỉ được có 1 phòng ban cấp COMPANY
       const existing = await this.departmentModel
         .findOne({ level: DepartmentLevel.COMPANY })
         .lean();
@@ -233,10 +482,6 @@ export class DepartmentsService {
     }
   }
 
-  /**
-   * Đệ quy xây cây từ flat list.
-   * parentId = null → lấy root (COMPANY).
-   */
   private buildTree(
     nodes: (Department & { _id: Types.ObjectId })[],
     parentId: Types.ObjectId | null,
@@ -259,3 +504,6 @@ export class DepartmentsService {
     }
   }
 }
+
+// Lưu ý: Đã loại bỏ phần định nghĩa trùng lặp của class "SetActingManagerDto" ở cuối file này,
+// vì nó đã được import chính xác từ './dto/set-acting-manager.dto' ở dòng số 18.

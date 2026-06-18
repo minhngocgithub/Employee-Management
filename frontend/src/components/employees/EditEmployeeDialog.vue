@@ -11,8 +11,7 @@
                 <div class="row q-col-gutter-md">
 
                     <div class="col-12 col-md-6">
-                        <q-input :model-value="employee.employee_code" outlined label="Mã nhân viên" readonly
-                            disable />
+                        <q-input :model-value="employee.employee_code" outlined label="Mã nhân viên" readonly />
                     </div>
 
                     <div class="col-12 col-md-6">
@@ -39,10 +38,6 @@
 
                     <div class="col-12 col-md-6">
                         <q-input v-model="form.date_of_birth" outlined type="date" label="Ngày sinh" />
-                    </div>
-
-                    <div class="col-12 col-md-6">
-                        <q-input v-model.number="form.salary" outlined type="number" label="Lương" />
                     </div>
 
                     <div class="col-12">
@@ -101,9 +96,8 @@ const genderOptions = [
 // Khởi tạo form từ dữ liệu employee hiện có
 // UpdateEmployeeDto với exactOptionalPropertyTypes: gender/salary cần
 // chấp nhận giá trị undefined tường minh (employee chưa điền thông tin)
-type EditEmployeeForm = Omit<UpdateEmployeeDto, 'gender' | 'salary'> & {
+type EditEmployeeForm = Omit<UpdateEmployeeDto, 'gender'> & {
     gender?: 'male' | 'female' | 'other' | undefined
-    salary?: number | undefined
 }
 
 const form = ref<EditEmployeeForm>({
@@ -117,7 +111,6 @@ const form = ref<EditEmployeeForm>({
     address: props.employee.address ?? '',
     department_id: props.employee.department_id,
     position: props.employee.position ?? '',
-    salary: props.employee.salary,
 })
 
 onMounted(async () => {
