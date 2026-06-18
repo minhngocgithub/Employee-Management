@@ -2,124 +2,77 @@
   <q-page class="q-pa-md page-container">
     <div class="row items-center q-mb-lg">
       <div class="col">
-        <h1 class="text-h4 q-my-none">Quản lý Nhân viên</h1>
+        <h1 class="text-h4 q-my-none">Duyệt đơn nghỉ phép</h1>
         <p class="text-subtitle2 text-grey-7 q-mt-xs">
-          Quản lý thông tin và tài khoản nhân viên
+          Xem và duyệt đơn nghỉ phép của nhân viên
         </p>
       </div>
       <div class="col-auto">
-        <q-btn
-          color="primary"
-          label="Thêm nhân viên"
-          icon="add"
-          @click="openCreateDialog"
-          :disable="loading"
-        />
+        <q-btn flat dense icon="refresh" label="Tải lại" :loading="loading" @click="loadRequests" />
       </div>
     </div>
 
-    <!-- Search & Filter -->
     <q-card class="q-mb-lg">
       <q-card-section>
         <div class="row q-col-gutter-md">
-          <div class="col-12 col-md-6">
-            <q-input
-              v-model="searchText"
-              outlined
-              dense
-              placeholder="Tìm kiếm theo email hoặc tên..."
-              clearable
-              @update:model-value="onSearch"
-            >
-              <template #prepend>
-                <q-icon name="search" />
-              </template>
-            </q-input>
+          <div class="col-12 col-md-3">
+            <q-select v-model="filterStatus" outlined dense :options="LEAVE_STATUS_OPTIONS" label="Trạng thái"
+              emit-value map-options clearable @update:model-value="onFilterChange" />
           </div>
           <div class="col-12 col-md-3">
-            <q-select
-              v-model="filterStatus"
-              outlined
-              dense
-              :options="statusOptions"
-              label="Trạng thái"
-              clearable
-              @update:model-value="loadEmployees"
-            />
-          </div>
-          <div class="col-12 col-md-3">
-            <q-btn
-              outline
-              color="primary"
-              label="Tải lại"
-              icon="refresh"
-              @click="loadEmployees"
-              :loading="loading"
-              class="full-width"
-            />
+            <q-select v-model="filterLeaveType" outlined dense :options="LEAVE_TYPE_OPTIONS" label="Loại nghỉ"
+              emit-value map-options clearable @update:model-value="onFilterChange" />
           </div>
         </div>
       </q-card-section>
     </q-card>
 
-    <!-- Table -->
-    <q-card :loading="loading">
-      <q-table
-        :rows="employees"
-        :columns="columns"
-        row-key="_id"
-        flat
-        bordered
-        v-model:pagination="pagination"
-        @request="loadEmployees"
-      >
-        <template #body-cell-full_name="props">
-          <q-td :props="props">
-            <strong>{{ props.row.full_name }}</strong>
+    <q-card>
+      <q-table :rows="requests" :columns="columns" row-key="_id" flat bordered :loading="loading"
+        v-model:pagination="pagination" @request="onTableRequest">
+        <template #body-cell-employee="props">
+          <q-td :props="props"> 
+            {{ props.row.employee_id.employee_code }}
+          </q-td>
+        </template>
+        <template #body-cell-employee_name="props">
+          <q-td :props="props"> 
+            {{ props.row.employee_id.full_name }}
           </q-td>
         </template>
 
-        <template #body-cell-is_active="props">
+        <template #body-cell-leave_type="props">
           <q-td :props="props">
-            <q-badge
-              :color="props.row.is_active ? 'green' : 'orange'"
-              :label="props.row.is_active ? 'Hoạt động' : 'Đã resign'"
-            />
+            {{ getLeaveTypeLabel(props.row.leave_type) }}
+          </q-td>
+        </template>
+
+        <template #body-cell-dates="props">
+          <q-td :props="props">
+            {{ formatDate(props.row.start_date) }}
+            →
+            {{ formatDate(props.row.end_date) }}
+            <div class="text-caption text-grey-7">
+              {{ countLeaveDays(props.row.start_date, props.row.end_date) }} ngày
+            </div>
+          </q-td>
+        </template>
+
+        <template #body-cell-status="props">
+          <q-td :props="props">
+            <q-badge :color="getLeaveStatusColor(props.row.status)" :label="getLeaveStatusLabel(props.row.status)" />
           </q-td>
         </template>
 
         <template #body-cell-actions="props">
           <q-td :props="props">
-            <q-btn
-              flat
-              dense
-              round
-              icon="edit"
-              size="sm"
-              color="primary"
-              @click="openEditDialog(props.row)"
-            />
-            <q-btn
-              flat
-              dense
-              round
-              icon="more_vert"
-              size="sm"
-              color="grey-8"
-            >
-              <q-menu anchor="bottom right" self="top right">
-                <q-list style="min-width: 200px">
-                  <q-item clickable v-close-popup @click="toggleActive(props.row)">
-                    <q-item-section>
-                      {{ props.row.is_active ? 'Đánh dấu resign' : 'Mở khóa' }}
-                    </q-item-section>
-                  </q-item>
-                  <q-item clickable v-close-popup @click="resetPassword(props.row)">
-                    <q-item-section>Đặt lại mật khẩu</q-item-section>
-                  </q-item>
-                </q-list>
-              </q-menu>
-            </q-btn>
+            <template v-if="props.row.status === 'pending'">
+              <q-btn flat dense color="positive" label="Duyệt" size="sm"
+                @click="openReviewDialog(props.row, 'approve')" />
+              <q-btn flat dense color="negative" label="Từ chối" size="sm"
+                @click="openReviewDialog(props.row, 'reject')" />
+            </template>
+            <span v-else class="text-grey-6">—</span>
           </q-td>
         </template>
       </q-table>
@@ -130,24 +83,30 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useQuasar } from 'quasar';
-import { accountsApi } from 'src/api/account.api';
+import { leaveRequestApi } from 'src/api/leave-request.api';
 import { employeeApi } from 'src/api/employee.api';
+import ReviewLeaveRequestDialog from 'src/components/leave-requests/ReviewLeaveRequestDialog.vue';
 import { useAlert } from 'src/composables/useAlert';
-import type { Employee } from 'src/types/api.types';
+import {
+  LEAVE_STATUS_OPTIONS,
+  LEAVE_TYPE_OPTIONS,
+  getLeaveTypeLabel,
+  getLeaveStatusLabel,
+  getLeaveStatusColor,
+  countLeaveDays,
+  formatDate,
+} from 'src/composables/useLeaveRequestLabels';
+import type { LeaveRequest, LeaveStatus, LeaveType } from 'src/types/api.types';
+import type { QTableProps } from 'quasar';
 
 const $q = useQuasar();
 const { success, error } = useAlert();
 
-const employees = ref<Employee[]>([]);
+const requests = ref<LeaveRequest[]>([]);
 const loading = ref(false);
-const searchText = ref('');
-const filterStatus = ref<'active' | 'resigned' | 'all' | undefined>(undefined);
-
-const statusOptions = [
-  { label: 'Hoạt động', value: 'active' },
-  { label: 'Đã resign', value: 'resigned' },
-  { label: 'Tất cả', value: 'all' },
-];
+const filterStatus = ref<LeaveStatus | null>('pending');
+const filterLeaveType = ref<LeaveType | null>(null);
+const employeeNameMap = ref<Record<string, string>>({});
 
 const pagination = ref({
   page: 1,
@@ -155,105 +114,74 @@ const pagination = ref({
   rowsNumber: 0,
 });
 
-const columns = [
-  { name: 'full_name', label: 'Họ tên',     field: 'full_name', align: 'left'   as const },
-  { name: 'email',     label: 'Email',       field: 'email',     align: 'left'   as const },
-  { name: 'position',  label: 'Chức vụ',    field: 'position',  align: 'left'   as const },
-  { name: 'is_active', label: 'Trạng thái', field: 'is_active', align: 'center' as const },
-  { name: 'actions',   label: 'Thao tác',   field: 'actions',   align: 'center' as const },
+const columns: QTableProps['columns'] = [
+  { name: 'employee', label: 'Mã nhân viên', field: 'employee_id', align: 'left' },
+  { name: 'employee_name', label: 'Tên nhân viên', field: 'employee_fullname', align: 'left' },
+  { name: 'leave_type', label: 'Loại nghỉ', field: 'leave_type', align: 'left' },
+  { name: 'dates', label: 'Thời gian', field: 'start_date', align: 'left' },
+  { name: 'reason', label: 'Lý do', field: 'reason', align: 'left' },
+  { name: 'status', label: 'Trạng thái', field: 'status', align: 'center' },
+  { name: 'actions', label: 'Thao tác', field: 'actions', align: 'center' },
 ];
 
-async function loadEmployees(): Promise<void> {
+async function loadEmployeeNames(): Promise<void> {
+  try {
+    const result = await employeeApi.list({ limit: 500, status: 'active' });
+    const map: Record<string, string> = {};
+    for (const emp of result.data) {
+      map[emp.employee_code] = emp.full_name;
+    }
+    employeeNameMap.value = map;
+  } catch {
+    // Không chặn trang nếu không load được tên nhân viên
+  }
+}
+
+async function loadRequests(): Promise<void> {
   loading.value = true;
   try {
-    const result = await employeeApi.list({
+    const result = await leaveRequestApi.list({
       page: pagination.value.page,
       limit: pagination.value.rowsPerPage,
-      ...(filterStatus.value != null && filterStatus.value !== 'all'
-        ? { status: filterStatus.value }
-        : {}),
-      ...(searchText.value ? { search: searchText.value } : {}),
+      ...(filterStatus.value ? { status: filterStatus.value } : {}),
+      ...(filterLeaveType.value ? { leave_type: filterLeaveType.value } : {}),
     });
-    employees.value = result.data;
+    requests.value = result.data;
     pagination.value.rowsNumber = result.total;
   } catch {
-    error('Không thể tải danh sách nhân viên');
+    error('Không thể tải danh sách đơn nghỉ phép');
   } finally {
     loading.value = false;
   }
 }
 
-async function onSearch(): Promise<void> {
+function onFilterChange(): void {
   pagination.value.page = 1;
-  await loadEmployees();
+  void loadRequests();
 }
 
-function openCreateDialog(): void {
+function onTableRequest(
+  requestProp: Parameters<NonNullable<QTableProps['onRequest']>>[0],
+): void {
+  pagination.value.page = requestProp.pagination.page;
+  pagination.value.rowsPerPage = requestProp.pagination.rowsPerPage;
+  void loadRequests();
+}
+
+function openReviewDialog(row: LeaveRequest, action: 'approve' | 'reject'): void {
   $q.dialog({
-    title: 'Tạo nhân viên mới',
-    message: 'Chức năng này sẽ được triển khai',
-    ok: { label: 'Đóng' },
+    component: ReviewLeaveRequestDialog,
+    componentProps: { leaveRequest: row, action },
+  }).onOk(() => {
+    success(action === 'approve' ? 'Đã duyệt đơn' : 'Đã từ chối đơn');
+    void loadRequests();
   });
 }
 
-function openEditDialog(employee: Employee): void {
-  $q.dialog({
-    title: `Chỉnh sửa: ${employee.full_name}`,
-    message: 'Chức năng này sẽ được triển khai',
-    ok: { label: 'Đóng' },
-  });
-}
-
-// ✅ Fix require-await + no-misused-promises: outer void, tách helper async
-function toggleActive(employee: Employee): void {
-  $q.dialog({
-    title: 'Xác nhận',
-    message: employee.is_active
-      ? 'Đánh dấu nhân viên này đã resign?'
-      : 'Mở khóa nhân viên này?',
-    ok: { label: 'Đồng ý', color: 'primary' },
-    cancel: { label: 'Hủy' },
-  }).onOk(() => { void _doToggleActive(employee); });
-}
-
-async function _doToggleActive(employee: Employee): Promise<void> {
-  loading.value = true;
-  try {
-    await employeeApi.resign(employee._id);
-    success('Cập nhật trạng thái thành công');
-    await loadEmployees();
-  } catch {
-    error('Không thể cập nhật trạng thái');
-  } finally {
-    loading.value = false;
-  }
-}
-
-function resetPassword(employee: Employee): void {
-  $q.dialog({
-    title: 'Đặt lại mật khẩu',
-    message: `Đặt lại mật khẩu cho ${employee.full_name}?`,
-    ok: { label: 'Đồng ý', color: 'primary' },
-    cancel: { label: 'Hủy' },
-  }).onOk(() => { void _doResetPassword(employee); });
-}
-
-async function _doResetPassword(employee: Employee): Promise<void> {
-  loading.value = true;
-  try {
-    const tempPassword = `Temp@${Date.now().toString().slice(-6)}`;
-    await accountsApi.resetPassword(employee.account_id, {
-      newPassword: tempPassword,
-    });
-    success('Đặt lại mật khẩu thành công');
-  } catch {
-    error('Không thể đặt lại mật khẩu');
-  } finally {
-    loading.value = false;
-  }
-}
-
-onMounted(loadEmployees);
+onMounted(async () => {
+  await loadEmployeeNames();
+  await loadRequests();
+});
 </script>
 
 <style scoped>

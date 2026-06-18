@@ -77,4 +77,14 @@ export const employeeApi = {
       .patch<Employee>(`/employees/${id}/resign`)
       .then((res) => res.data);
   },
+
+  /**
+   * PATCH /employees/:id/toggle-status
+   * Toggle employee status between ACTIVE and RESIGNED (allows reactivation)
+   */
+  toggleStatus(id: string): Promise<Employee> {
+    return api
+      .patch<Employee>(`/employees/${id}/toggle-status`)
+      .then((res) => res.data);
+  },
 };

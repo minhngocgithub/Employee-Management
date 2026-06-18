@@ -174,9 +174,11 @@ export class AccountsService {
     if (!account) {
       throw new NotFoundException('Không tìm thấy tài khoản');
     }
-
+    const plainPassword = dto.newPassword;
     account.password_hash = await bcrypt.hash(dto.newPassword, 10);
     account.refresh_token_hash = null;
+    console.log('account after reset password', account);
+    console.log(`[DEBUG] Mật khẩu gốc mới: ${plainPassword}`);
     await account.save();
   }
 

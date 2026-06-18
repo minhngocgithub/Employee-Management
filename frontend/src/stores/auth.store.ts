@@ -27,6 +27,8 @@ export const useAuthStore = defineStore('auth', {
     role: (state) => state.user?.role ?? null,
     mustChangePassword: (state): boolean =>
       state.user?.must_change_password === true,
+    isActingManager: (state): boolean =>
+      state.user?.is_acting_manager === true,
   },
 
   actions: {

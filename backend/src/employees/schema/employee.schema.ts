@@ -53,7 +53,8 @@ export class Employee {
 
   @Prop({ type: Date, required: true })
   declare join_date: Date;
-
+  @Prop({ type: Date, default: null })
+  declare end_date: Date | null;
   @Prop({
     type: String,
     enum: EmployeeStatus,

@@ -7,14 +7,8 @@
           Quản lý cấu trúc tổ chức và các phòng ban
         </p>
       </div>
-      <div class="col-auto">
-        <q-btn
-          color="primary"
-          label="Thêm phòng ban"
-          icon="add"
-          @click="openCreateDialog"
-          :disable="loading"
-        />
+      <div v-if="canCreateDepartment" class="col-auto">
+        <q-btn color="primary" label="Thêm phòng ban" icon="add" @click="openCreateDialog" :disable="loading" />
       </div>
     </div>
 
@@ -23,29 +17,16 @@
       <q-card-section>
         <div class="row q-col-gutter-md">
           <div class="col-12 col-md-6">
-            <q-input
-              v-model="searchText"
-              outlined
-              dense
-              placeholder="Tìm kiếm phòng ban..."
-              clearable
-              @update:model-value="onSearch"
-            >
+            <q-input v-model="searchText" outlined dense clearable debounce="500" placeholder="Tìm kiếm phòng ban..."
+              @update:model-value="onSearch">
               <template #prepend>
                 <q-icon name="search" />
               </template>
             </q-input>
           </div>
           <div class="col-12 col-md-6">
-            <q-btn
-              outline
-              color="primary"
-              label="Tải lại"
-              icon="refresh"
-              @click="loadDepartments"
-              :loading="loading"
-              class="full-width"
-            />
+            <q-btn outline color="primary" label="Tải lại" icon="refresh" @click="loadDepartments" :loading="loading"
+              class="full-width" />
           </div>
         </div>
       </q-card-section>
@@ -53,15 +34,8 @@
 
     <!-- Table -->
     <q-card :loading="loading">
-      <q-table
-        :rows="departments"
-        :columns="columns"
-        row-key="_id"
-        flat
-        bordered
-        v-model:pagination="pagination"
-        @request="loadDepartments"
-      >
+      <q-table :rows="departments" :columns="columns" row-key="_id" flat bordered v-model:pagination="pagination"
+        @request="loadDepartments">
         <template #body-cell-name="props">
           <q-td :props="props">
             <strong>{{ props.row.name }}</strong>
@@ -74,29 +48,24 @@
           </q-td>
         </template>
 
+        <template #body-cell-acting_manager="props">
+          <q-td :props="props">
+            {{ props.row.acting_manager_id ? 'Có' : '—' }}
+          </q-td>
+        </template>
+
         <template #body-cell-actions="props">
           <q-td :props="props">
-            <q-btn
-              flat
-              dense
-              round
-              icon="edit"
-              size="sm"
-              color="primary"
-              @click="openEditDialog(props.row)"
-            />
-            <q-btn
-              flat
-              dense
-              round
-              icon="more_vert"
-              size="sm"
-              color="grey-8"
-            >
+            <q-btn flat dense round icon="edit" size="sm" color="primary" @click="openEditDialog(props.row)" />
+            <q-btn flat dense round icon="more_vert" size="sm" color="grey-8">
               <q-menu anchor="bottom right" self="top right">
                 <q-list style="min-width: 200px">
                   <q-item clickable v-close-popup @click="assignManager(props.row)">
                     <q-item-section>Gán manager</q-item-section>
+                  </q-item>
+                  <q-item clickable v-close-popup :disable="!props.row.manager_id"
+                    @click="assignActingManager(props.row)">
+                    <q-item-section>Ủy quyền tạm thời</q-item-section>
                   </q-item>
                   <q-item clickable v-close-popup @click="viewEmployees(props.row)">
                     <q-item-section>Xem nhân viên</q-item-section>
@@ -113,12 +82,16 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
+import axios from 'axios'
 import { useQuasar } from 'quasar';
 import { departmentApi } from 'src/api';
 import { useAlert } from 'src/composables/useAlert';
-import type { Department } from 'src/types/api.types';
+import type { Department, DepartmentEmployee } from 'src/types/api.types';
 import CreateDepartmentDialog from 'src/components/CreateDepartmentDialog.vue';
-
+import EditDepartmentDialog from 'src/components/departments/EditDepartmentDialog.vue';
+import AssignManagerDialog from 'src/components/departments/AssignManagerDialog.vue';
+import AssignActingManagerDialog from 'src/components/departments/AssignActingManagerDialog.vue';
+import { useAuthStore } from 'src/stores/auth.store'
 const $q = useQuasar();
 const { success, error } = useAlert();
 
@@ -131,7 +104,10 @@ const pagination = ref({
   rowsPerPage: 10,
   rowsNumber: 0,
 });
-
+const authStore = useAuthStore()
+const canCreateDepartment = computed(() =>
+  authStore.role !== 'manager'
+)
 const departments = computed(() => {
   if (!searchText.value) return allDepartments.value;
   const q = searchText.value.toLowerCase();
@@ -142,17 +118,21 @@ const departments = computed(() => {
 });
 
 const columns = [
-  { name: 'name',    label: 'Tên phòng ban', field: 'name',       align: 'left'   as const },
-  { name: 'code',    label: 'Mã',            field: 'code',       align: 'left'   as const },
-  { name: 'level',   label: 'Cấp',           field: 'level',      align: 'center' as const },
-  { name: 'manager', label: 'Manager',       field: 'manager_id', align: 'center' as const },
-  { name: 'actions', label: 'Thao tác',      field: 'actions',    align: 'center' as const },
+  { name: 'name', label: 'Tên phòng ban', field: 'name', align: 'left' as const },
+  { name: 'code', label: 'Mã', field: 'code', align: 'left' as const },
+  { name: 'level', label: 'Cấp', field: 'level', align: 'center' as const },
+  { name: 'manager', label: 'Manager', field: 'manager_id', align: 'center' as const },
+  { name: 'acting_manager', label: 'Ủy quyền', field: 'acting_manager_id', align: 'center' as const },
+  { name: 'actions', label: 'Thao tác', field: 'actions', align: 'center' as const },
 ];
 
 async function loadDepartments(): Promise<void> {
   loading.value = true;
   try {
-    const result = await departmentApi.list();
+    const result = await departmentApi.list(
+      false,
+      searchText.value.trim(),
+    )
     allDepartments.value = result;
     pagination.value.rowsNumber = result.length;
   } catch {
@@ -162,7 +142,6 @@ async function loadDepartments(): Promise<void> {
   }
 }
 
-// ✅ Fix require-await: bỏ async vì search dùng computed, không cần await
 function onSearch(): void {
   pagination.value.page = 1;
 }
@@ -173,49 +152,154 @@ function openCreateDialog(): void {
 }
 
 function openEditDialog(dept: Department): void {
+  $q.dialog({ component: EditDepartmentDialog, componentProps: { department: dept } })
+    .onOk(() => { void loadDepartments(); });
+}
+
+
+function assignManager(
+  dept: Department,
+): void {
   $q.dialog({
-    title: `Chỉnh sửa: ${dept.name}`,
-    message: 'Chức năng này sẽ được triển khai',
-    ok: { label: 'Đóng' },
+    component: AssignManagerDialog,
+    componentProps: {
+      department: dept,
+    },
+  }).onOk((managerId: string) => {
+    if (managerId) {
+      void _doAssignManager(
+        dept,
+        managerId,
+      )
+    }
+  })
+}
+
+
+async function _doAssignManager(
+  dept: Department,
+  managerId: string,
+): Promise<void> {
+  loading.value = true
+
+  try {
+    await departmentApi.assignManager(
+      dept._id,
+      managerId,
+    )
+
+    success('Gán manager thành công')
+
+    await loadDepartments()
+
+  } catch (err: unknown) {
+    let message = 'Không thể gán manager'
+
+    if (axios.isAxiosError(err)) {
+      message =
+        err.response?.data?.message ??
+        message
+    }
+
+    error(message)
+
+    console.error(
+      '[Assign Manager]',
+      err,
+    )
+  } finally {
+    loading.value = false
+  }
+}
+
+
+function assignActingManager(dept: Department): void {
+  $q.dialog({
+    component: AssignActingManagerDialog,
+    componentProps: { department: dept },
+  }).onOk((actingManagerId: string | null) => {
+    void _doAssignActingManager(dept, actingManagerId);
   });
 }
 
-function assignManager(dept: Department): void {
-  $q.dialog({
-    title: 'Gán manager',
-    message: `Gán manager cho ${dept.name}?`,
-    prompt: {
-      model: '',
-      type: 'text',
-      label: 'ID nhân viên',
-    },
-    ok: { label: 'Gán', color: 'primary' },
-    cancel: { label: 'Hủy' },
-  }).onOk((managerId: string) => { void _doAssignManager(dept, managerId); });
-}
-
-async function _doAssignManager(dept: Department, managerId: string): Promise<void> {
+async function _doAssignActingManager(
+  dept: Department,
+  actingManagerId: string | null,
+): Promise<void> {
   loading.value = true;
   try {
-    await departmentApi.assignManager(dept._id, managerId);
-    success('Gán manager thành công');
+    await departmentApi.setActingManager(dept._id, actingManagerId);
+    success(
+      actingManagerId
+        ? 'Ủy quyền tạm thời thành công'
+        : 'Đã gỡ ủy quyền tạm thời',
+    );
     await loadDepartments();
-  } catch {
-    error('Không thể gán manager');
+  } catch (err: unknown) {
+    let message = 'Không thể ủy quyền tạm thời';
+    if (axios.isAxiosError(err)) {
+      message = err.response?.data?.message ?? message;
+    }
+    error(message);
   } finally {
     loading.value = false;
   }
 }
 
-function viewEmployees(dept: Department): void {
-  $q.dialog({
-    title: `Nhân viên - ${dept.name}`,
-    message: 'Chức năng này sẽ được triển khai',
-    ok: { label: 'Đóng' },
-  });
+
+async function viewEmployees(
+  dept: Department,
+): Promise<void> {
+  loading.value = true
+
+  try {
+    const employees =
+      await departmentApi.getEmployees(
+        dept._id,
+      )
+
+    if (employees.length === 0) {
+      error(
+        `Phòng ban ${dept.name} chưa có nhân viên`,
+      )
+      return
+    }
+
+    const employeeList = employees
+      .map((emp: DepartmentEmployee) => {
+        const email =
+          emp.account_id?.email ?? 'N/A'
+
+        const position =
+          emp.position ?? 'Chưa gán'
+
+        return `• ${emp.full_name} (${position}) - ${email}`
+      })
+      .join('<br>')
+
+    $q.dialog({
+      title: `Danh sách nhân viên - ${dept.name}`,
+      message: `
+        <div style="max-height:400px;overflow-y:auto;">
+          ${employeeList}
+        </div>
+      `,
+      html: true,
+      ok: {
+        label: 'Đóng',
+      },
+    })
+  } catch {
+    error(
+      'Không thể lấy danh sách nhân viên',
+    )
+  } finally {
+    loading.value = false
+  }
 }
 
 onMounted(loadDepartments);
+
 </script>
 
 <style scoped>

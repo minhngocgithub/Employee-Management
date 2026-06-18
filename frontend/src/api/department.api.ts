@@ -4,6 +4,7 @@ import type {
   DepartmentTree,
   CreateDepartmentDto,
   UpdateDepartmentDto,
+  DepartmentEmployee,
 } from 'src/types/api.types';
 
 export const departmentApi = {
@@ -22,12 +23,18 @@ export const departmentApi = {
    * List all active departments
    * ?includeInactive=true - Admin can see inactive departments
    */
-  list(includeInactive?: boolean): Promise<Department[]> {
+  list(
+    includeInactive?: boolean,
+    search?: string,
+  ): Promise<Department[]> {
     return api
       .get<Department[]>('/departments', {
-        params: { includeInactive },
+        params: {
+          includeInactive,
+          search,
+        },
       })
-      .then((res) => res.data);
+      .then((res) => res.data)
   },
 
   /**
@@ -80,6 +87,31 @@ export const departmentApi = {
   assignManager(id: string, managerId: string | null): Promise<Department> {
     return api
       .patch<Department>(`/departments/${id}/manager`, { manager_id: managerId })
+      .then((res) => res.data);
+  },
+
+  /**
+   * PATCH /departments/:id/acting-manager
+   * Assign or remove acting manager (must differ from manager_id)
+   */
+  setActingManager(
+    id: string,
+    actingManagerId: string | null,
+  ): Promise<Department> {
+    return api
+      .patch<Department>(`/departments/${id}/acting-manager`, {
+        acting_manager_id: actingManagerId,
+      })
+      .then((res) => res.data);
+  },
+
+  /**
+   * GET /departments/:id/employees
+   * Get all employees in a department (name, position, email, etc.)
+   */
+  getEmployees(id: string): Promise<DepartmentEmployee[]> {
+    return api
+      .get<DepartmentEmployee[]>(`/departments/${id}/employees`)
       .then((res) => res.data);
   },
 

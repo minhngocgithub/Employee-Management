@@ -13,6 +13,8 @@ import { AuditLogsModule } from './audit-logs/audit-logs.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { LoginHistoryModule } from './login-history/login-history.module';
 import { MailModule } from './mail/mail.module';
+import { OtpModule } from './otp/otp.module';
+import { ScheduleModule } from '@nestjs/schedule';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 import { AuditLogInterceptor } from './common/interceptors/audit-log.interceptor';
@@ -42,6 +44,8 @@ import { AuditLogInterceptor } from './common/interceptors/audit-log.interceptor
     DashboardModule,
     LoginHistoryModule,
     MailModule,
+    OtpModule,
+    ScheduleModule.forRoot(),
   ],
   controllers: [AppController],
   providers: [

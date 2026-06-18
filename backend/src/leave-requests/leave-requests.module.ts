@@ -12,6 +12,7 @@ import {
 import { Account, AccountSchema } from '../accounts/schema/account.schema';
 import { LeaveRequestsService } from './leave-requests.service';
 import { LeaveRequestsController } from './leave-requests.controller';
+import { LeaveRequestsScheduler } from './leave-request.scheduler';
 
 @Module({
   imports: [
@@ -23,7 +24,7 @@ import { LeaveRequestsController } from './leave-requests.controller';
     ]),
   ],
   controllers: [LeaveRequestsController],
-  providers: [LeaveRequestsService],
+  providers: [LeaveRequestsService, LeaveRequestsScheduler],
   exports: [LeaveRequestsService],
 })
 export class LeaveRequestsModule {}

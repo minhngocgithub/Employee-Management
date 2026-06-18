@@ -28,6 +28,7 @@ import {
 import { AuthenticatedUser } from '../auth/strategies/jwt-payload.interface';
 import { CreateLeaveRequestDto } from './dto/create-leave-request.dto';
 import { ReviewLeaveRequestDto } from './dto/review-leave-request.dto';
+import { UpdateLeaveRequestDto } from './dto/update-leave-request.dto';
 import { QueryLeaveRequestDto } from './dto/query-leave-request.dto';
 import { PaginatedResult } from '../accounts/accounts.service';
 
@@ -53,6 +54,7 @@ type LeanDepartment = {
   _id: Types.ObjectId;
   parent_id: Types.ObjectId | null;
   manager_id: Types.ObjectId | null;
+  acting_manager_id: Types.ObjectId | null;
   level: number;
 };
 type LeanAccount = {
@@ -164,10 +166,12 @@ export class LeaveRequestsService {
     const [data, total] = await Promise.all([
       this.leaveRequestModel
         .find(filter)
+        .populate('employee_id', 'full_name employee_code')
         .skip(skip)
         .limit(limit)
         .sort({ createdAt: -1 })
-        .lean<LeanLeaveRequest[]>(),
+        .lean(),
+
       this.leaveRequestModel.countDocuments(filter),
     ]);
     return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
@@ -309,21 +313,26 @@ export class LeaveRequestsService {
       );
     }
 
-    // Reviewer phải là manager của targetDept
+    // Reviewer phải là manager hoặc acting manager của targetDept (Admin đã bypass ở trên)
     const targetDept = await this.departmentModel
       .findById(targetDeptId)
-      .select('manager_id')
+      .select('manager_id acting_manager_id')
       .lean<LeanDepartment>();
 
-    if (!targetDept?.manager_id) {
+    if (!targetDept?.manager_id && !targetDept?.acting_manager_id) {
       throw new BadRequestException(
-        'Phòng ban chưa có manager, không thể duyệt đơn',
+        'Phòng ban chưa có manager hoặc người được ủy quyền, không thể duyệt đơn',
       );
     }
 
-    if (targetDept.manager_id.toString() !== reviewer.id) {
+    const reviewerId = reviewer.id;
+    const isManager = targetDept.manager_id?.toString() === reviewerId;
+    const isActingManager =
+      targetDept.acting_manager_id?.toString() === reviewerId;
+
+    if (!isManager && !isActingManager) {
       throw new ForbiddenException(
-        'Bạn không phải manager phụ trách phòng ban này',
+        'Bạn không phải manager hoặc người được ủy quyền phụ trách phòng ban này',
       );
     }
   }
@@ -407,5 +416,119 @@ export class LeaveRequestsService {
     if (!Types.ObjectId.isValid(id)) {
       throw new BadRequestException('ID không hợp lệ');
     }
+  }
+
+  /**
+   * PATCH /leave-requests/:id
+   * Only creator can edit pending requests
+   */
+  async update(
+    id: string,
+    dto: UpdateLeaveRequestDto,
+    user: AuthenticatedUser,
+  ): Promise<LeanLeaveRequest> {
+    this.assertValidObjectId(id);
+
+    // Không dùng populate — lấy lean document, employee_id vẫn là ObjectId
+    const request = await this.leaveRequestModel
+      .findById(id)
+      .lean<LeanLeaveRequest>();
+
+    if (!request) {
+      throw new NotFoundException('Đơn nghỉ phép không tồn tại');
+    }
+
+    if (request.status !== LeaveStatus.PENDING) {
+      throw new BadRequestException(
+        'Chỉ có thể chỉnh sửa đơn ở trạng thái PENDING',
+      );
+    }
+
+    const employee = await this.getEmployeeByAccountId(user.id);
+
+    // So sánh trực tiếp employee_id (ObjectId) với _id của employee
+    if (request.employee_id.toString() !== employee._id.toString()) {
+      throw new ForbiddenException('Bạn chỉ có thể chỉnh sửa đơn của mình');
+    }
+
+    const updateData: Partial<{
+      leave_type: LeaveType;
+      start_date: Date;
+      end_date: Date;
+      reason: string;
+    }> = {};
+
+    if (dto.leave_type) updateData.leave_type = dto.leave_type;
+
+    if (dto.start_date || dto.end_date) {
+      const startDate = new Date(dto.start_date ?? request.start_date);
+      const endDate = new Date(dto.end_date ?? request.end_date);
+
+      if (startDate > endDate) {
+        throw new BadRequestException('Ngày bắt đầu phải trước ngày kết thúc');
+      }
+
+      const overlap = await this.leaveRequestModel.findOne({
+        _id: { $ne: new Types.ObjectId(id) },
+        employee_id: request.employee_id,
+        status: { $in: [LeaveStatus.PENDING, LeaveStatus.APPROVED] },
+        start_date: { $lte: endDate },
+        end_date: { $gte: startDate },
+      });
+
+      if (overlap) {
+        throw new BadRequestException(
+          'Đã có đơn nghỉ phép trong khoảng thời gian này',
+        );
+      }
+
+      updateData.start_date = startDate;
+      updateData.end_date = endDate;
+    }
+
+    if (dto.reason) updateData.reason = dto.reason;
+
+    const updated = await this.leaveRequestModel
+      .findByIdAndUpdate(id, updateData, { new: true })
+      .lean<LeanLeaveRequest>();
+
+    if (!updated) throw new NotFoundException('Đơn nghỉ phép không tồn tại');
+
+    return updated;
+  }
+
+  /**
+   * DELETE /leave-requests/:id
+   * Only creator can delete pending requests
+   */
+  async delete(
+    id: string,
+    user: AuthenticatedUser,
+  ): Promise<{ message: string }> {
+    this.assertValidObjectId(id);
+
+    // Không dùng populate — employee_id giữ nguyên là ObjectId
+    const request = await this.leaveRequestModel
+      .findById(id)
+      .lean<LeanLeaveRequest>();
+
+    if (!request) {
+      throw new NotFoundException('Đơn nghỉ phép không tồn tại');
+    }
+
+    if (request.status !== LeaveStatus.PENDING) {
+      throw new BadRequestException('Chỉ có thể xóa đơn ở trạng thái PENDING');
+    }
+
+    const employee = await this.getEmployeeByAccountId(user.id);
+
+    // So sánh trực tiếp — không cần cast any
+    if (request.employee_id.toString() !== employee._id.toString()) {
+      throw new ForbiddenException('Bạn chỉ có thể xóa đơn của mình');
+    }
+
+    await this.leaveRequestModel.findByIdAndDelete(id);
+
+    return { message: 'Xóa đơn thành công' };
   }
 }

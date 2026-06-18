@@ -20,4 +20,16 @@ export class MailService {
     this.logger.log(`  Email công ty: ${companyEmail}`);
     this.logger.log(`  Mật khẩu tạm thời: ${tempPassword}`);
   }
+
+  sendOtpEmail(email: string, code: string): void {
+    this.logger.log(`[EMAIL] Gửi OTP tới ${email}`);
+    this.logger.log(`  Mã OTP: ${code} (hết hạn sau 2 phút)`);
+  }
+
+  sendPasswordResetConfirmation(email: string, fullName: string): void {
+    this.logger.log(`[EMAIL] Xác nhận đặt lại mật khẩu tới ${email}`);
+    this.logger.log(
+      `  Chào ${fullName}, mật khẩu của bạn đã được đặt lại thành công.`,
+    );
+  }
 }

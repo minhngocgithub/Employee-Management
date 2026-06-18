@@ -6,14 +6,15 @@
           <q-card-section class="text-center">
             <div class="text-h5 text-weight-bold text-primary">EMS</div>
             <div class="text-subtitle2 text-grey-7 q-mt-xs">
-              Đặt lại mật khẩu
+              {{ currentStep === 'email' ? 'Đặt lại mật khẩu' : 'Xác nhận OTP' }}
             </div>
           </q-card-section>
 
           <q-card-section>
-            <q-form class="q-gutter-md" @submit.prevent="onSubmit">
+            <!-- Step 1: Request OTP -->
+            <q-form v-if="currentStep === 'email'" class="q-gutter-md" @submit.prevent="requestOtp">
               <div class="text-subtitle2 text-grey-7 q-mb-md">
-                Nhập email công ty của bạn. Quản trị viên sẽ gửi mật khẩu mới cho bạn.
+                Nhập email công ty của bạn. Chúng tôi sẽ gửi mã OTP để xác minh.
               </div>
 
               <q-input
@@ -35,7 +36,7 @@
 
               <q-btn
                 type="submit"
-                label="Cấp mật khẩu mới"
+                label="Gửi mã OTP"
                 color="primary"
                 class="full-width"
                 unelevated
@@ -52,6 +53,89 @@
                 />
               </div>
             </q-form>
+
+            <!-- Step 2: Verify OTP & Reset Password -->
+            <q-form v-else-if="currentStep === 'verify'" class="q-gutter-md" @submit.prevent="resetPassword">
+              <div class="text-subtitle2 text-grey-7 q-mb-md">
+                Nhập mã OTP từ email của bạn và mật khẩu mới.
+              </div>
+
+              <q-input
+                v-model="otp"
+                type="text"
+                label="Mã OTP (6 chữ số)"
+                outlined
+                dense
+                maxlength="6"
+                :disable="loading"
+                :rules="[
+                  (v) => !!v || 'Vui lòng nhập mã OTP',
+                  (v) => /^\d{6}$/.test(v) || 'Mã OTP phải là 6 chữ số',
+                ]"
+                @input="otp = otp.replace(/\D/g, '')"
+              >
+                <template #prepend>
+                  <q-icon name="vpn_key" />
+                </template>
+              </q-input>
+
+              <q-input
+                v-model="newPassword"
+                type="password"
+                label="Mật khẩu mới"
+                outlined
+                dense
+                :disable="loading"
+                :rules="[
+                  (v) => !!v || 'Vui lòng nhập mật khẩu mới',
+                  (v) => v.length >= 8 || 'Mật khẩu phải có ít nhất 8 ký tự',
+                ]"
+              >
+                <template #prepend>
+                  <q-icon name="lock" />
+                </template>
+              </q-input>
+
+              <q-input
+                v-model="confirmPassword"
+                type="password"
+                label="Xác nhận mật khẩu"
+                outlined
+                dense
+                :disable="loading"
+                :rules="[
+                  (v) => !!v || 'Vui lòng xác nhận mật khẩu',
+                  (v) => v === newPassword || 'Mật khẩu không khớp',
+                ]"
+              >
+                <template #prepend>
+                  <q-icon name="lock" />
+                </template>
+              </q-input>
+
+              <div class="text-caption text-grey-7">
+                Mã OTP hết hạn sau: <strong>{{ otpExpiryTime }}</strong> giây
+              </div>
+
+              <q-btn
+                type="submit"
+                label="Đặt lại mật khẩu"
+                color="primary"
+                class="full-width"
+                unelevated
+                :loading="loading"
+              />
+
+              <div class="text-center q-mt-md">
+                <q-btn
+                  flat
+                  dense
+                  color="primary"
+                  label="Quay lại"
+                  @click="goBack"
+                />
+              </div>
+            </q-form>
           </q-card-section>
         </q-card>
       </q-page>
@@ -60,17 +144,25 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
-import { accountsApi } from 'src/api/account.api';
+import { otpApi } from 'src/api/otp.api';
 import type { AxiosError } from 'axios';
 
 const $q = useQuasar();
 const router = useRouter();
 
+type Step = 'email' | 'verify';
+
+const currentStep = ref<Step>('email');
 const email = ref('');
+const otp = ref('');
+const newPassword = ref('');
+const confirmPassword = ref('');
 const loading = ref(false);
+const otpExpiryTime = ref(120);
+let otpCountdownInterval: number | null = null;
 
 function getErrorMessage(error: unknown): string {
   const axiosError = error as AxiosError<{ message?: string | string[] }>;
@@ -80,38 +172,50 @@ function getErrorMessage(error: unknown): string {
   return 'Có lỗi xảy ra. Vui lòng thử lại.';
 }
 
-async function onSubmit(): Promise<void> {
+async function requestOtp(): Promise<void> {
   loading.value = true;
   try {
-    // Get all accounts to find the one with this email
-    const accounts = await accountsApi.list({
-      search: email.value.trim().toLowerCase(),
-      limit: 100,
+    const result = await otpApi.forgotPassword(email.value.trim().toLowerCase());
+    $q.notify({
+      type: 'positive',
+      message: result.message,
     });
+    currentStep.value = 'verify';
+    otpExpiryTime.value = result.expires_in;
+    startOtpCountdown();
+  } catch (error) {
+    $q.notify({
+      type: 'negative',
+      message: getErrorMessage(error),
+    });
+  } finally {
+    loading.value = false;
+  }
+}
 
-    const account = accounts.data.find(
-      (acc) => acc.email.toLowerCase() === email.value.trim().toLowerCase(),
-    );
+async function resetPassword(): Promise<void> {
+  if (newPassword.value !== confirmPassword.value) {
+    $q.notify({
+      type: 'negative',
+      message: 'Mật khẩu không khớp',
+    });
+    return;
+  }
 
-    if (!account) {
-      $q.notify({
-        type: 'warning',
-        message: 'Email không tìm thấy trong hệ thống',
-      });
-      return;
-    }
-
-    // Reset password with temporary password
-    const tempPassword = generateTemporaryPassword();
-    await accountsApi.resetPassword(account._id, {
-      newPassword: tempPassword,
+  loading.value = true;
+  try {
+    const result = await otpApi.resetPassword({
+      email: email.value.trim().toLowerCase(),
+      code: otp.value.trim(),
+      new_password: newPassword.value,
     });
 
     $q.notify({
       type: 'positive',
-      message: 'Mật khẩu đã được đặt lại thành công. Admin sẽ gửi mật khẩu mới cho bạn.',
+      message: result.message,
     });
 
+    stopOtpCountdown();
     await router.replace({ name: 'login' });
   } catch (error) {
     $q.notify({
@@ -123,12 +227,38 @@ async function onSubmit(): Promise<void> {
   }
 }
 
-function generateTemporaryPassword(): string {
-  // Generate temporary password: Temp@<current_timestamp>
-  // Format: Temp@123456 (meets requirements: uppercase, lowercase, numbers)
-  const timestamp = Date.now().toString().slice(-6);
-  return `Temp@${timestamp}`;
+function goBack(): void {
+  stopOtpCountdown();
+  currentStep.value = 'email';
+  otp.value = '';
+  newPassword.value = '';
+  confirmPassword.value = '';
 }
+
+function startOtpCountdown(): void {
+  otpCountdownInterval = window.setInterval(() => {
+    otpExpiryTime.value -= 1;
+    if (otpExpiryTime.value <= 0) {
+      stopOtpCountdown();
+      $q.notify({
+        type: 'warning',
+        message: 'Mã OTP đã hết hạn. Vui lòng yêu cầu mã mới.',
+      });
+      goBack();
+    }
+  }, 1000);
+}
+
+function stopOtpCountdown(): void {
+  if (otpCountdownInterval !== null) {
+    clearInterval(otpCountdownInterval);
+    otpCountdownInterval = null;
+  }
+}
+
+onUnmounted(() => {
+  stopOtpCountdown();
+});
 </script>
 
 <style scoped>

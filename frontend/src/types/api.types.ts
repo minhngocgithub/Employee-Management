@@ -5,14 +5,16 @@ export interface PaginatedResult<T> {
   limit: number;
   totalPages: number;
 }
-
+export type EmployeeStatus = 'active' | 'resigned';
 // Employee
 export interface Employee {
   _id: string;
-  account_id: string;
+  // GET /employees populate account_id → { _id, email }
+  // Các endpoint khác (getMe, getById) trả raw string — dùng union để an toàn
+  account_id: { _id: string; email: string } | string;
   employee_code: string;
   full_name: string;
-  email: string;
+  personal_email?: string;
   phone?: string;
   avatar_url?: string;
   date_of_birth?: string;
@@ -21,9 +23,8 @@ export interface Employee {
   department_id: string;
   position?: string;
   start_date: string;
-  end_date?: string;
-  salary?: number;
-  is_active: boolean;
+  join_date: string;         // ← đổi từ start_date
+  status: EmployeeStatus;
   created_at: string;
   updated_at: string;
 }
@@ -38,6 +39,7 @@ export interface CreateEmployeeDto {
   department_id: string
   position?: string
   join_date: string
+
 }
 
 export interface CreateEmployeeResponseDto {
@@ -76,12 +78,22 @@ export interface Department {
   code: string;
   level: DepartmentLevel;
   manager_id?: string;
+  acting_manager_id?: string | null;
   parent_id?: string;
+  acting_until?: string | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;
 }
-
+export interface DepartmentEmployee {
+  _id: string;
+  full_name: string;
+  position?: string;
+  account_id?: {
+    _id: string;
+    email: string;
+  };
+}
 export interface DepartmentTree extends Department {
   children: DepartmentTree[];
 }
@@ -105,6 +117,10 @@ export interface AssignManagerDto {
   manager_id: string | null;
 }
 
+export interface AssignActingManagerDto {
+  acting_manager_id: string | null;
+}
+
 // ========== Leave Request Types ==========
 export type LeaveStatus = 'pending' | 'approved' | 'rejected' | 'cancelled';
 export type LeaveType = 'annual' | 'sick' | 'unpaid' | 'other';
@@ -115,31 +131,40 @@ export interface LeaveRequest {
   leave_type: LeaveType;
   start_date: string;
   end_date: string;
-  reason?: string;
+  reason: string;
   status: LeaveStatus;
-  reviewer_id?: string;
-  notes?: string;
-  created_at: string;
-  updated_at: string;
+  reviewed_by?: string | null;
+  rejection_reason?: string | null;
+  reviewed_at?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface CreateLeaveRequestDto {
   leave_type: LeaveType;
   start_date: string;
   end_date: string;
+  reason: string;
+}
+
+export interface UpdateLeaveRequestDto {
+  leave_type?: LeaveType;
+  start_date?: string;
+  end_date?: string;
   reason?: string;
 }
 
 export interface ReviewLeaveRequestDto {
   status: 'approved' | 'rejected';
-  notes?: string;
+  rejection_reason?: string;
 }
 
 export interface QueryLeaveRequestDto {
   status?: LeaveStatus;
+  leave_type?: LeaveType;
   employee_id?: string;
-  start_date?: string;
-  end_date?: string;
+  from_date?: string;
+  to_date?: string;
   page?: number;
   limit?: number;
 }

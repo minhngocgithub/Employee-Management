@@ -9,7 +9,13 @@
       </div>
 
       <div class="col-auto">
-        <q-btn color="primary" label="Thêm nhân viên" icon="add" @click="openCreateDialog" :disable="loading" />
+        <q-btn
+          color="primary"
+          label="Thêm nhân viên"
+          icon="add"
+          @click="openCreateDialog"
+          :disable="loading"
+        />
       </div>
     </div>
 
@@ -18,8 +24,14 @@
       <q-card-section>
         <div class="row q-col-gutter-md">
           <div class="col-12 col-md-6">
-            <q-input v-model="searchText" outlined dense placeholder="Tìm kiếm theo email hoặc tên..." clearable
-              @update:model-value="onSearch">
+            <q-input
+              v-model="searchText"
+              outlined
+              dense
+              placeholder="Tìm kiếm theo email hoặc tên..."
+              clearable
+              @update:model-value="onSearch"
+            >
               <template #prepend>
                 <q-icon name="search" />
               </template>
@@ -27,14 +39,32 @@
           </div>
 
           <div class="col-12 col-md-3">
-            <q-select v-model="filterStatus" outlined dense options-dense :options="statusOptions" option-label="label"
-              option-value="value" emit-value map-options label="Trạng thái" clearable
-              @update:model-value="loadEmployees" />
+            <q-select
+              v-model="filterStatus"
+              outlined
+              dense
+              options-dense
+              :options="statusOptions"
+              option-label="label"
+              option-value="value"
+              emit-value
+              map-options
+              label="Trạng thái"
+              clearable
+              @update:model-value="onFilterChange"
+            />
           </div>
 
           <div class="col-12 col-md-3">
-            <q-btn outline color="primary" label="Tải lại" icon="refresh" @click="loadEmployees" :loading="loading"
-              class="full-width" />
+            <q-btn
+              outline
+              color="primary"
+              label="Tải lại"
+              icon="refresh"
+              @click="loadEmployees"
+              :loading="loading"
+              class="full-width"
+            />
           </div>
         </div>
       </q-card-section>
@@ -42,41 +72,76 @@
 
     <!-- Table -->
     <q-card>
-      <q-table :rows="employees" :columns="columns" row-key="_id" flat bordered v-model:pagination="pagination"
-        :loading="loading" @request="loadEmployees">
+      <q-table
+        :rows="employees"
+        :columns="columns"
+        row-key="_id"
+        flat
+        bordered
+        v-model:pagination="pagination"
+        :loading="loading"
+        @request="onTableRequest"
+      >
         <template #body-cell-full_name="props">
           <q-td :props="props">
             <strong>{{ props.row.full_name }}</strong>
           </q-td>
         </template>
 
-        <template #body-cell-is_active="props">
+        <template #body-cell-status="props">
           <q-td :props="props">
-            <q-badge :color="props.row.is_active ? 'green' : 'orange'" :label="props.row.is_active
-                ? 'Hoạt động'
-                : 'Đã resign'
-              " />
+            <q-badge
+              :color="props.row.status === 'active' ? 'green' : 'orange'"
+              :label="
+                props.row.status === 'active'
+                  ? 'Hoạt động'
+                  : 'Đã resign'
+              "
+            />
           </q-td>
         </template>
 
         <template #body-cell-actions="props">
           <q-td :props="props">
-            <q-btn flat dense round icon="edit" size="sm" color="primary" @click="openEditDialog(props.row)" />
+            <q-btn
+              flat
+              dense
+              round
+              icon="edit"
+              size="sm"
+              color="primary"
+              @click="openEditDialog(props.row)"
+            />
 
-            <q-btn flat dense round icon="more_vert" size="sm" color="grey-8">
+            <q-btn
+              flat
+              dense
+              round
+              icon="more_vert"
+              size="sm"
+              color="grey-8"
+            >
               <q-menu anchor="bottom right" self="top right">
                 <q-list style="min-width: 200px">
-                  <q-item clickable v-close-popup @click="toggleActive(props.row)">
+                  <q-item
+                    clickable
+                    v-close-popup
+                    @click="toggleActive(props.row)"
+                  >
                     <q-item-section>
                       {{
-                        props.row.is_active
+                        props.row.status === 'active'
                           ? 'Đánh dấu resign'
                           : 'Mở khóa'
                       }}
                     </q-item-section>
                   </q-item>
 
-                  <q-item clickable v-close-popup @click="resetPassword(props.row)">
+                  <q-item
+                    clickable
+                    v-close-popup
+                    @click="resetPassword(props.row)"
+                  >
                     <q-item-section>
                       Đặt lại mật khẩu
                     </q-item-section>
@@ -133,10 +198,12 @@ const statusOptions = [
 ];
 
 const pagination = ref({
+  sortBy: null,
+  descending: false,
   page: 1,
   rowsPerPage: 10,
   rowsNumber: 0,
-});
+})
 
 const columns = [
   {
@@ -148,7 +215,8 @@ const columns = [
   {
     name: 'email',
     label: 'Email',
-    field: 'email',
+    field: (row: Employee) =>
+      typeof row.account_id === 'object' ? row.account_id.email : '—',
     align: 'left' as const,
   },
   {
@@ -158,9 +226,9 @@ const columns = [
     align: 'left' as const,
   },
   {
-    name: 'is_active',
+    name: 'status',
     label: 'Trạng thái',
-    field: 'is_active',
+    field: 'status',
     align: 'center' as const,
   },
   {
@@ -172,7 +240,7 @@ const columns = [
 ];
 
 async function loadEmployees(): Promise<void> {
-  loading.value = true;
+  loading.value = true
 
   try {
     const result = await employeeApi.list({
@@ -187,22 +255,34 @@ async function loadEmployees(): Promise<void> {
       ...(searchText.value
         ? { search: searchText.value }
         : {}),
-    });
+    })
 
-    employees.value = result.data;
-    pagination.value.rowsNumber = result.total;
-  } catch {
-    error('Không thể tải danh sách nhân viên');
+    employees.value = result.data
+    pagination.value.rowsNumber = result.total
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
+function onTableRequest(props: {
+  pagination: {
+    page: number
+    rowsPerPage: number
+  }
+}): void {
+  pagination.value.page = props.pagination.page
+  pagination.value.rowsPerPage =
+    props.pagination.rowsPerPage
 
+  void loadEmployees()
+}
 async function onSearch(): Promise<void> {
   pagination.value.page = 1;
   await loadEmployees();
 }
-
+async function onFilterChange(): Promise<void> {
+  pagination.value.page = 1
+  await loadEmployees()
+}
 function openCreateDialog(): void {
   $q.dialog({
     component: CreateEmployeeDialog,
@@ -225,7 +305,7 @@ function openEditDialog(employee: Employee): void {
 function toggleActive(employee: Employee): void {
   $q.dialog({
     title: 'Xác nhận',
-    message: employee.is_active
+    message: employee.status === 'active'
       ? 'Đánh dấu nhân viên này đã resign?'
       : 'Mở khóa nhân viên này?',
     ok: {
@@ -246,7 +326,7 @@ async function doToggleActive(
   loading.value = true;
 
   try {
-    await employeeApi.resign(employee._id);
+    await employeeApi.toggleStatus(employee._id);
 
     success('Cập nhật trạng thái thành công');
 
@@ -284,12 +364,12 @@ async function doResetPassword(
       .toString()
       .slice(-6)}`;
 
-    await accountsApi.resetPassword(
-      employee.account_id,
-      {
-        newPassword: tempPassword,
-      },
-    );
+    const accountId =
+      typeof employee.account_id === 'object'
+        ? employee.account_id._id
+        : employee.account_id;
+
+    await accountsApi.resetPassword(accountId, { newPassword: tempPassword });
 
     success('Đặt lại mật khẩu thành công');
   } catch {
