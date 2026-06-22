@@ -50,7 +50,13 @@ export class UpdateEmployeeDto {
   @IsDateString({}, { message: 'Ngày vào làm không hợp lệ (YYYY-MM-DD)' })
   join_date?: string;
 
+  /**
+   * HR cập nhật sau khi Admin kích hoạt tài khoản.
+   * Các giá trị hợp lệ: working | retired | resigned
+   */
   @IsOptional()
-  @IsEnum(EmployeeStatus, { message: 'Status không hợp lệ' })
+  @IsEnum(EmployeeStatus, {
+    message: 'Trạng thái nhân viên không hợp lệ (working | retired | resigned)',
+  })
   status?: EmployeeStatus;
 }

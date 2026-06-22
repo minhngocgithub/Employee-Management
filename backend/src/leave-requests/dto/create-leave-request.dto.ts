@@ -1,62 +1,46 @@
 import {
-  IsDateString,
+  IsArray,
   IsEnum,
-  IsNotEmpty,
+  IsOptional,
   IsString,
+  IsUrl,
   MaxLength,
-  registerDecorator,
-  ValidationArguments,
-  ValidationOptions,
 } from 'class-validator';
 import { LeaveType } from '../schema/leave-request.schema';
 
 /**
- * Custom decorator: start_date phải >= today + N ngày.
- * Dùng để enforce rule nộp đơn trước ít nhất 2 ngày.
+ * Base DTO — chỉ chứa field chung cho MỌI loại đơn.
+ * Mỗi loại đơn extend class này và khai báo thêm field đặc thù.
+ *
+ * KHÔNG đặt start_date / end_date / reason ở đây vì:
+ *   - Một số loại không có date range (OVERTIME, RESIGNATION...)
+ *   - Validation ngày/giờ khác nhau theo từng loại
  */
-function MinDaysFromNow(days: number, validationOptions?: ValidationOptions) {
-  return function (object: object, propertyName: string) {
-    registerDecorator({
-      name: 'minDaysFromNow',
-      target: (object as { constructor: new (...args: unknown[]) => unknown })
-        .constructor,
-      propertyName,
-      constraints: [days],
-      options: validationOptions,
-      validator: {
-        validate(value: unknown, args: ValidationArguments) {
-          if (typeof value !== 'string') return false;
-          const minDays = args.constraints[0] as number;
-          const today = new Date();
-          today.setHours(0, 0, 0, 0);
-          const minDate = new Date(today);
-          minDate.setDate(minDate.getDate() + minDays);
-          const inputDate = new Date(value);
-          inputDate.setHours(0, 0, 0, 0);
-          return inputDate >= minDate;
-        },
-        defaultMessage(args: ValidationArguments) {
-          const minDays = args.constraints[0] as number;
-          return `Bạn phải nộp đơn trước ${minDays} ngày so với ngày nghỉ`;
-        },
-      },
-    });
-  };
-}
-
 export class CreateLeaveRequestDto {
-  @IsEnum(LeaveType, { message: 'Loại nghỉ phép không hợp lệ' })
+  @IsEnum(LeaveType, { message: 'leave_type không hợp lệ' })
   declare leave_type: LeaveType;
 
-  @IsDateString({}, { message: 'Ngày bắt đầu không hợp lệ (YYYY-MM-DD)' })
-  @MinDaysFromNow(2)
-  declare start_date: string;
+  /**
+   * URL file đính kèm — upload lên storage trước, truyền URL vào.
+   * Optional, mặc định [].
+   */
+  @IsOptional()
+  @IsArray({ message: 'attachment_urls phải là mảng' })
+  @IsUrl(
+    {},
+    {
+      each: true,
+      message: 'Mỗi phần tử của attachment_urls phải là URL hợp lệ',
+    },
+  )
+  declare attachment_urls?: string[];
 
-  @IsDateString({}, { message: 'Ngày kết thúc không hợp lệ (YYYY-MM-DD)' })
-  declare end_date: string;
-
+  /**
+   * Ghi chú nội bộ — service sẽ guard, chỉ ADMIN/MANAGER/HR/MANAGER_HR được lưu.
+   * Employee gửi lên sẽ bị bỏ qua.
+   */
+  @IsOptional()
   @IsString()
-  @IsNotEmpty({ message: 'Lý do không được để trống' })
-  @MaxLength(500, { message: 'Lý do không được vượt quá 500 ký tự' })
-  declare reason: string;
+  @MaxLength(500, { message: 'internal_note không được vượt quá 500 ký tự' })
+  declare internal_note?: string;
 }

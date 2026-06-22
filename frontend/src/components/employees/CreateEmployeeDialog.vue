@@ -15,7 +15,8 @@
                     </div>
 
                     <div class="col-12 col-md-6">
-                        <q-input v-model="form.personal_email" outlined type="email" label="Email cá nhân *" />
+                        <q-input v-model="form.personal_email" outlined type="email" label="Email cá nhân *"
+                            hint="Thông tin đăng nhập sẽ được gửi đến email này" />
                     </div>
 
                     <div class="col-12 col-md-6">
@@ -32,8 +33,19 @@
                     </div>
 
                     <div class="col-12 col-md-6">
-                        <q-select v-model="form.gender" outlined label="Giới tính" :options="genderOptions" emit-value
-                            map-options />
+                        <!-- FIX: thêm field chức danh, placeholder "Nhân viên" để rõ giá trị mặc định -->
+                        <q-input
+                            v-model="form.position"
+                            outlined
+                            label="Chức danh"
+                            placeholder="Nhân viên"
+                            clearable
+                        />
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                        <q-select v-model="form.gender" outlined label="Giới tính" :options="genderOptions"
+                            emit-value map-options />
                     </div>
 
                     <div class="col-12 col-md-6">
@@ -49,7 +61,6 @@
 
             <q-card-actions align="right">
                 <q-btn flat label="Hủy" @click="onDialogCancel" />
-
                 <q-btn color="primary" label="Tạo nhân viên" :loading="loading" @click="submit" />
             </q-card-actions>
         </q-card>
@@ -95,6 +106,7 @@ const form = ref<CreateEmployeeDto>({
     date_of_birth: '',
     address: '',
     avatar_url: '',
+    position: '',  // FIX: thêm position — chuỗi rỗng sẽ bị xóa trước khi gửi, backend tự default "Nhân viên"
 })
 
 onMounted(async () => {
@@ -125,8 +137,6 @@ async function submit(): Promise<void> {
     loading.value = true
 
     try {
-        // Loại bỏ các field optional rỗng (class-validator @IsOptional
-        // không bỏ qua chuỗi rỗng '', gây fail @IsDateString/@IsUrl...)
         const payload: CreateEmployeeDto = { ...form.value }
         for (const key of Object.keys(payload) as (keyof CreateEmployeeDto)[]) {
             if (payload[key] === '') {
@@ -136,13 +146,15 @@ async function submit(): Promise<void> {
 
         const result = await employeeApi.create(payload)
 
+        // Thông báo thành công với đầy đủ thông tin
         $q.notify({
             type: 'positive',
-            timeout: 12000,
-            message:
-                `Tạo thành công\n` +
-                `Mã NV: ${result.employee_code}\n` +
-                `Email công ty: ${result.company_email}`,
+            timeout: 8000,
+            multiLine: true,
+            message: `Tạo nhân viên thành công`,
+            caption:
+                `Mã NV: ${result.employee_code}  •  Email công ty: ${result.company_email}\n` +
+                `📧 Thông tin đăng nhập đã gửi tới: ${payload.personal_email}`,
         })
 
         onDialogOK(result)
@@ -156,9 +168,8 @@ async function submit(): Promise<void> {
             type: 'negative',
             message,
         })
-
     } finally {
-    loading.value = false
-}
+        loading.value = false
+    }
 }
 </script>

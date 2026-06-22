@@ -32,30 +32,31 @@
             <div class="text-h4 text-blue-9 q-my-md">
               {{ stats?.total_employees || 0 }}
             </div>
+            <!-- FIX: active_employees → working_employees -->
             <q-linear-progress
-              :value="(stats?.active_employees || 0) / (stats?.total_employees || 1)"
+              :value="(stats?.working_employees || 0) / (stats?.total_employees || 1)"
               color="green"
               class="q-mt-md"
             />
             <div class="text-caption text-grey-7 q-mt-sm">
-              {{ stats?.active_employees || 0 }} đang hoạt động
+              {{ stats?.working_employees || 0 }} đang làm việc
             </div>
           </q-card-section>
         </q-card>
       </div>
 
-      <!-- Active Employees -->
+      <!-- Working Employees (FIX: active → working) -->
       <div class="col-12 col-sm-6 col-md-3 animate-slide-in-up">
         <q-card class="hover-lift h-full">
           <q-card-section class="bg-green-1">
-            <div class="text-subtitle2 text-green-9">Nhân viên hoạt động</div>
+            <div class="text-subtitle2 text-green-9">Nhân viên đang làm việc</div>
           </q-card-section>
           <q-card-section>
             <div class="text-h4 text-green-9 q-my-md">
-              {{ stats?.active_employees || 0 }}
+              {{ stats?.working_employees || 0 }}
             </div>
             <div class="text-caption text-grey-7 q-mt-md">
-              {{ (((stats?.active_employees || 0) / (stats?.total_employees || 1)) * 100).toFixed(1) }}%
+              {{ (((stats?.working_employees || 0) / (stats?.total_employees || 1)) * 100).toFixed(1) }}%
               tổng số
             </div>
           </q-card-section>
@@ -175,8 +176,9 @@
                         </div>
                         <div class="col-auto">
                           <span class="text-bold">{{ dept.total }}</span>
+                          <!-- FIX: dept.active → dept.working -->
                           <span class="text-caption text-grey-7 q-ml-xs">
-                            ({{ dept.active }} hoạt động)
+                            ({{ dept.working }} đang làm việc)
                           </span>
                         </div>
                       </div>
@@ -393,7 +395,6 @@ onMounted(() => {
   border-radius: 8px;
 }
 
-/* Responsive adjustments */
 @media (max-width: 599px) {
   .q-page {
     padding: 12px;

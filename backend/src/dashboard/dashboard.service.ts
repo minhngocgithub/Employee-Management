@@ -24,9 +24,10 @@ export interface HeadcountByDepartment {
   department_id: string;
   department_name: string;
   total: number;
-  active: number;
-  inactive: number;
-  resigned: number;
+  working: number; // Đi làm
+  retired: number; // Nghỉ hưu
+  resigned: number; // Nghỉ việc
+  pending: number; // Chưa xác định (status = null, chờ HR cập nhật)
 }
 
 export interface LeaveStats {
@@ -40,8 +41,10 @@ export interface LeaveStats {
 
 export interface AdminDashboardStats {
   total_employees: number;
-  active_employees: number;
-  resigned_employees: number;
+  working_employees: number; // Đi làm
+  retired_employees: number; // Nghỉ hưu
+  resigned_employees: number; // Nghỉ việc
+  pending_employees: number; // Chưa xác định (status = null)
   total_departments: number;
   headcount_by_department: HeadcountByDepartment[];
   leave_stats_this_month: LeaveStats;
@@ -51,7 +54,7 @@ export interface AdminDashboardStats {
 export interface ManagerDashboardStats {
   department_id: string;
   total_employees: number;
-  active_employees: number;
+  working_employees: number;
   leave_stats_this_month: LeaveStats;
   pending_reviews: number;
 }
@@ -61,9 +64,10 @@ export interface ManagerDashboardStats {
 type HeadcountAggResult = {
   _id: Types.ObjectId;
   total: number;
-  active: number;
-  inactive: number;
+  working: number;
+  retired: number;
   resigned: number;
+  pending: number;
 };
 
 type LeaveCountAggResult = {
@@ -92,23 +96,26 @@ export class DashboardService {
   async getAdminStats(): Promise<AdminDashboardStats> {
     const [
       totalEmployees,
-      activeEmployees,
+      workingEmployees,
+      retiredEmployees,
       resignedEmployees,
+      pendingEmployees,
       totalDepartments,
       headcountRaw,
       leaveStatsMonth,
       leaveStatsAll,
     ] = await Promise.all([
       this.employeeModel.countDocuments(),
-      this.employeeModel.countDocuments({ status: EmployeeStatus.ACTIVE }),
+      this.employeeModel.countDocuments({ status: EmployeeStatus.WORKING }),
+      this.employeeModel.countDocuments({ status: EmployeeStatus.RETIRED }),
       this.employeeModel.countDocuments({ status: EmployeeStatus.RESIGNED }),
+      this.employeeModel.countDocuments({ status: null }), // Chưa xác định
       this.departmentModel.countDocuments({ is_active: true }),
       this.getHeadcountByDepartment(),
       this.getLeaveStats(this.getMonthRange()),
       this.getLeaveStats(),
     ]);
 
-    // Gắn tên department vào headcount
     const deptIds = headcountRaw.map((h) => h._id);
     const departments = await this.departmentModel
       .find({ _id: { $in: deptIds } })
@@ -124,16 +131,19 @@ export class DashboardService {
         department_id: h._id.toString(),
         department_name: deptNameMap.get(h._id.toString()) ?? 'Unknown',
         total: h.total,
-        active: h.active,
-        inactive: h.inactive,
+        working: h.working,
+        retired: h.retired,
         resigned: h.resigned,
+        pending: h.pending,
       }),
     );
 
     return {
       total_employees: totalEmployees,
-      active_employees: activeEmployees,
+      working_employees: workingEmployees,
+      retired_employees: retiredEmployees,
       resigned_employees: resignedEmployees,
+      pending_employees: pendingEmployees,
       total_departments: totalDepartments,
       headcount_by_department,
       leave_stats_this_month: leaveStatsMonth,
@@ -148,7 +158,6 @@ export class DashboardService {
   ): Promise<ManagerDashboardStats> {
     const deptObjectId = new Types.ObjectId(requester.department_id);
 
-    // Lấy danh sách employee trong dept
     const employeeIds = await this.employeeModel
       .find({ department_id: deptObjectId })
       .select('_id')
@@ -156,15 +165,14 @@ export class DashboardService {
 
     const ids = employeeIds.map((e) => e._id);
 
-    const [totalEmployees, activeEmployees, leaveStatsMonth, pendingReviews] =
+    const [totalEmployees, workingEmployees, leaveStatsMonth, pendingReviews] =
       await Promise.all([
         this.employeeModel.countDocuments({ department_id: deptObjectId }),
         this.employeeModel.countDocuments({
           department_id: deptObjectId,
-          status: EmployeeStatus.ACTIVE,
+          status: EmployeeStatus.WORKING,
         }),
         this.getLeaveStats(this.getMonthRange(), ids),
-        // Đếm số đơn đang chờ duyệt trong dept
         this.leaveRequestModel.countDocuments({
           employee_id: { $in: ids },
           status: LeaveStatus.PENDING,
@@ -174,7 +182,7 @@ export class DashboardService {
     return {
       department_id: requester.department_id,
       total_employees: totalEmployees,
-      active_employees: activeEmployees,
+      working_employees: workingEmployees,
       leave_stats_this_month: leaveStatsMonth,
       pending_reviews: pendingReviews,
     };
@@ -184,7 +192,7 @@ export class DashboardService {
 
   /**
    * Aggregate số lượng nhân viên theo từng phòng ban,
-   * phân loại theo status.
+   * phân loại đầy đủ theo 3 trạng thái + null (pending).
    */
   private async getHeadcountByDepartment(): Promise<HeadcountAggResult[]> {
     return this.employeeModel.aggregate<HeadcountAggResult>([
@@ -192,19 +200,24 @@ export class DashboardService {
         $group: {
           _id: '$department_id',
           total: { $sum: 1 },
-          active: {
+          working: {
             $sum: {
-              $cond: [{ $eq: ['$status', EmployeeStatus.ACTIVE] }, 1, 0],
+              $cond: [{ $eq: ['$status', EmployeeStatus.WORKING] }, 1, 0],
             },
           },
-          inactive: {
+          retired: {
             $sum: {
-              $cond: [{ $eq: ['$status', EmployeeStatus.INACTIVE] }, 1, 0],
+              $cond: [{ $eq: ['$status', EmployeeStatus.RETIRED] }, 1, 0],
             },
           },
           resigned: {
             $sum: {
               $cond: [{ $eq: ['$status', EmployeeStatus.RESIGNED] }, 1, 0],
+            },
+          },
+          pending: {
+            $sum: {
+              $cond: [{ $eq: ['$status', null] }, 1, 0],
             },
           },
         },
@@ -217,9 +230,6 @@ export class DashboardService {
    * Thống kê leave requests:
    * - Tổng theo status
    * - Tổng theo loại nghỉ phép
-   *
-   * @param dateRange - lọc theo khoảng thời gian (tháng hiện tại)
-   * @param employeeIds - lọc theo danh sách employee (cho Manager)
    */
   private async getLeaveStats(
     dateRange?: { $gte: Date; $lte: Date },
@@ -246,10 +256,8 @@ export class DashboardService {
       this.leaveRequestModel.countDocuments(matchStage),
     ]);
 
-    // Map status counts
     const statusMap = new Map(statusCounts.map((s) => [s._id, s.count]));
 
-    // Map type counts — khởi tạo tất cả LeaveType về 0
     const by_type = Object.values(LeaveType).reduce(
       (acc, type) => {
         acc[type] = 0;
@@ -271,9 +279,6 @@ export class DashboardService {
     };
   }
 
-  /**
-   * Trả về range từ đầu đến cuối tháng hiện tại.
-   */
   private getMonthRange(): { $gte: Date; $lte: Date } {
     const now = new Date();
     const start = new Date(now.getFullYear(), now.getMonth(), 1);

@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ForbiddenException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
@@ -16,6 +17,7 @@ import {
 import {
   Account,
   AccountDocument,
+  AccountStatus,
   Role,
 } from '../accounts/schema/account.schema';
 import {
@@ -34,7 +36,6 @@ import { MailService } from '../mail/mail.service';
 
 type LeanEmployee = {
   _id: Types.ObjectId;
-  // Sau populate: account_id là object { _id, email }, không còn là raw ObjectId
   account_id: { _id: Types.ObjectId; email: string } | Types.ObjectId;
   full_name: string;
   personal_email: string;
@@ -46,18 +47,20 @@ type LeanEmployee = {
   position?: string | null;
   department_id: Types.ObjectId;
   join_date: Date;
-  status: EmployeeStatus;
+  status: EmployeeStatus | null;
   employee_code: string;
 };
 
 type EmployeeFilter = {
   department_id?: Types.ObjectId;
-  status?: EmployeeStatus;
+  status?: EmployeeStatus | null;
   $text?: { $search: string };
 };
 
 @Injectable()
 export class EmployeesService {
+  private readonly logger = new Logger(EmployeesService.name);
+
   constructor(
     @InjectModel(Employee.name)
     private readonly employeeModel: Model<EmployeeDocument>,
@@ -73,6 +76,8 @@ export class EmployeesService {
 
   /**
    * Tạo nhân viên + tài khoản tự động trong một transaction.
+   * - Account tạo ra với status = INACTIVE (chờ Admin kích hoạt)
+   * - Employee tạo ra với status = null (HR cập nhật sau khi Admin kích hoạt)
    * Sinh email @company.com, mật khẩu tạm thời, gửi thông báo qua personal_email.
    */
   async create(dto: CreateEmployeeDto): Promise<CreateEmployeeResponseDto> {
@@ -105,6 +110,7 @@ export class EmployeesService {
     try {
       session.startTransaction();
 
+      // Account mới tạo = INACTIVE, chờ Admin kích hoạt (US-315)
       const [account] = await this.accountModel.create(
         [
           {
@@ -113,13 +119,15 @@ export class EmployeesService {
             role: Role.EMPLOYEE,
             department_id: new Types.ObjectId(dto.department_id),
             employee_id: null,
-            is_active: true,
+            status: AccountStatus.INACTIVE,
+            failed_login_attempts: 0,
             is_first_login: true,
           },
         ],
         { session },
       );
 
+      // Employee mới tạo = null, HR cập nhật sau khi Admin kích hoạt tài khoản
       const [employee] = await this.employeeModel.create(
         [
           {
@@ -134,10 +142,10 @@ export class EmployeesService {
               : null,
             gender: dto.gender ?? null,
             address: dto.address ?? null,
-            position: dto.position?.trim() ?? null,
+            position: dto.position?.trim() || 'Nhân viên',
             department_id: new Types.ObjectId(dto.department_id),
             join_date: new Date(dto.join_date),
-            status: EmployeeStatus.ACTIVE,
+            status: null,
           },
         ],
         { session },
@@ -151,12 +159,24 @@ export class EmployeesService {
 
       await session.commitTransaction();
 
-      void this.mailService.sendWelcomeEmail(
-        dto.personal_email,
-        companyEmail,
-        tempPassword,
-        dto.full_name.trim(),
+      this.logger.log(
+        `[NEW EMPLOYEE] Name: ${dto.full_name} | Email: ${companyEmail}`,
       );
+
+      // Gửi email ngoài transaction — không block response, lỗi chỉ log
+      this.mailService
+        .sendWelcomeEmail(
+          dto.personal_email,
+          companyEmail,
+          tempPassword,
+          dto.full_name.trim(),
+        )
+        .catch((err: unknown) => {
+          this.logger.error(
+            `Gửi welcome email thất bại tới ${dto.personal_email}`,
+            err,
+          );
+        });
 
       return {
         message: 'Tạo tài khoản và hồ sơ nhân viên thành công',
@@ -184,6 +204,7 @@ export class EmployeesService {
 
     const filter: EmployeeFilter = {};
 
+    // MANAGER_HR có quyền xem toàn bộ như HR, không bị giới hạn theo dept
     if (requester.role === Role.MANAGER) {
       filter.department_id = new Types.ObjectId(requester.department_id);
     } else if (department_id) {
@@ -202,7 +223,7 @@ export class EmployeesService {
     const [data, total] = await Promise.all([
       this.employeeModel
         .find(filter)
-        .populate('account_id', 'email')   // chỉ lấy field email, bỏ password_hash/token
+        .populate('account_id', 'email')
         .skip(skip)
         .limit(limit)
         .sort({ createdAt: -1 })
@@ -225,6 +246,7 @@ export class EmployeesService {
       throw new NotFoundException('Không tìm thấy nhân viên');
     }
 
+    // MANAGER_HR không bị giới hạn theo dept
     if (requester?.role === Role.MANAGER) {
       if (employee.department_id.toString() !== requester.department_id) {
         throw new ForbiddenException(
@@ -269,7 +291,8 @@ export class EmployeesService {
     }
     if (dto.gender !== undefined) employee.gender = dto.gender ?? null;
     if (dto.address !== undefined) employee.address = dto.address ?? null;
-    if (dto.position !== undefined) employee.position = dto.position ?? null;
+    if (dto.position !== undefined)
+      employee.position = (dto.position ?? null) as string;
     if (dto.join_date !== undefined) {
       employee.join_date = new Date(dto.join_date);
     }
@@ -283,6 +306,10 @@ export class EmployeesService {
     return employee.toObject() as unknown as LeanEmployee;
   }
 
+  /**
+   * HR cập nhật trạng thái nhân viên thành RESIGNED + ghi end_date.
+   * Không tự động khóa tài khoản — Admin tự vào xem dashboard rồi quyết định lock.
+   */
   async resign(id: string): Promise<LeanEmployee> {
     this.assertValidObjectId(id, 'id');
 
@@ -295,21 +322,18 @@ export class EmployeesService {
       throw new BadRequestException('Nhân viên đã ở trạng thái nghỉ việc');
     }
 
-    // Set end_date to current time (when admin clicked resign)
     const now = new Date();
-    now.setUTCHours(0, 0, 0, 0); // Midnight UTC for consistency with join_date
+    now.setUTCHours(0, 0, 0, 0);
 
     employee.status = EmployeeStatus.RESIGNED;
     employee.end_date = now;
     await employee.save();
 
-    // Also disable the account (user cannot login anymore)
-    await this.accountModel.findByIdAndUpdate(employee.account_id, {
-      is_active: false,
-    });
+    // Không auto-lock account — Admin tự quyết định lock thủ công (US-314)
 
     return employee.toObject() as unknown as LeanEmployee;
   }
+
   async toggleStatus(id: string): Promise<LeanEmployee> {
     this.assertValidObjectId(id, 'id');
 
@@ -319,12 +343,12 @@ export class EmployeesService {
     }
 
     if (employee.status === EmployeeStatus.RESIGNED) {
-      employee.status = EmployeeStatus.ACTIVE;
-    } else if (employee.status === EmployeeStatus.ACTIVE) {
+      employee.status = EmployeeStatus.WORKING;
+    } else if (employee.status === EmployeeStatus.WORKING) {
       employee.status = EmployeeStatus.RESIGNED;
     } else {
       throw new BadRequestException(
-        'Chỉ có thể chuyển đổi giữa trạng thái ACTIVE và RESIGNED',
+        'Chỉ có thể chuyển đổi giữa trạng thái WORKING và RESIGNED',
       );
     }
 
@@ -332,7 +356,8 @@ export class EmployeesService {
     return employee.toObject() as unknown as LeanEmployee;
   }
 
-  /** Kiểm tra trùng email công ty, thêm hậu tố số nếu cần: nam.nguyen2@company.com */
+  // ─── Private helpers ──────────────────────────────────────────────────────
+
   private async resolveUniqueEmail(baseEmail: string): Promise<string> {
     const [localPart, domain] = baseEmail.split('@');
     let candidate = baseEmail;

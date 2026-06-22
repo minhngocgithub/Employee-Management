@@ -17,8 +17,7 @@
       <q-card-section>
         <div class="row q-col-gutter-md">
           <div class="col-12 col-md-6">
-            <q-input v-model="searchText" outlined dense clearable debounce="500" placeholder="Tìm kiếm phòng ban..."
-              @update:model-value="onSearch">
+            <q-input v-model="searchText" outlined dense clearable debounce="500" placeholder="Tìm kiếm phòng ban...">
               <template #prepend>
                 <q-icon name="search" />
               </template>
@@ -81,17 +80,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import axios from 'axios'
 import { useQuasar } from 'quasar';
 import { departmentApi } from 'src/api';
 import { useAlert } from 'src/composables/useAlert';
 import type { Department, DepartmentEmployee } from 'src/types/api.types';
-import CreateDepartmentDialog from 'src/components/CreateDepartmentDialog.vue';
+import CreateDepartmentDialog from 'src/components/departments/CreateDepartmentDialog.vue';
 import EditDepartmentDialog from 'src/components/departments/EditDepartmentDialog.vue';
 import AssignManagerDialog from 'src/components/departments/AssignManagerDialog.vue';
 import AssignActingManagerDialog from 'src/components/departments/AssignActingManagerDialog.vue';
 import { useAuthStore } from 'src/stores/auth.store'
+import { useDebounceFn } from '@vueuse/core'
 const $q = useQuasar();
 const { success, error } = useAlert();
 
@@ -142,9 +142,13 @@ async function loadDepartments(): Promise<void> {
   }
 }
 
-function onSearch(): void {
-  pagination.value.page = 1;
-}
+const debouncedSearch = useDebounceFn(async () => {
+  await loadDepartments()
+}, 500)
+
+watch(searchText, () => {
+  void debouncedSearch();
+})
 
 function openCreateDialog(): void {
   $q.dialog({ component: CreateDepartmentDialog })
@@ -216,21 +220,29 @@ async function _doAssignManager(
 function assignActingManager(dept: Department): void {
   $q.dialog({
     component: AssignActingManagerDialog,
-    componentProps: { department: dept },
-  }).onOk((actingManagerId: string | null) => {
-    void _doAssignActingManager(dept, actingManagerId);
-  });
+    componentProps: {
+      department: dept,
+    },
+  }).onOk((payload: ActingManagerPayload) => {
+    void _doAssignActingManager(
+      dept,
+      payload,
+    )
+  })
 }
-
+interface ActingManagerPayload {
+  acting_manager_id: string | null
+  acting_until: string | null
+}
 async function _doAssignActingManager(
   dept: Department,
-  actingManagerId: string | null,
+  payload: ActingManagerPayload,
 ): Promise<void> {
   loading.value = true;
   try {
-    await departmentApi.setActingManager(dept._id, actingManagerId);
+    await departmentApi.setActingManager(dept._id, payload.acting_manager_id);
     success(
-      actingManagerId
+      payload.acting_manager_id
         ? 'Ủy quyền tạm thời thành công'
         : 'Đã gỡ ủy quyền tạm thời',
     );

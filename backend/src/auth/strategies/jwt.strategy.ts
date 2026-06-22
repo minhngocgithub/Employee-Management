@@ -8,7 +8,11 @@ import {
   JwtPayload,
   AuthenticatedUser,
 } from '../strategies/jwt-payload.interface';
-import { Account, AccountDocument } from '../../accounts/schema/account.schema';
+import {
+  Account,
+  AccountDocument,
+  AccountStatus,
+} from '../../accounts/schema/account.schema';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
@@ -25,15 +29,14 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   }
 
   async validate(payload: JwtPayload): Promise<AuthenticatedUser> {
-    // is_active không có select:false nên không cần dấu +
     const account = await this.accountModel
       .findById(payload.sub)
-      .select('is_active')
-      .lean<{ _id: Types.ObjectId; is_active: boolean }>();
+      .select('status')
+      .lean<{ _id: Types.ObjectId; status: AccountStatus }>();
 
-    if (!account || !account.is_active) {
+    if (!account || account.status !== AccountStatus.ACTIVE) {
       throw new UnauthorizedException(
-        'Tài khoản không tồn tại hoặc đã bị khóa',
+        'Tài khoản không tồn tại hoặc chưa được kích hoạt / đã bị khóa',
       );
     }
 

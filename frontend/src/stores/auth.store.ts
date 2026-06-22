@@ -29,6 +29,15 @@ export const useAuthStore = defineStore('auth', {
       state.user?.must_change_password === true,
     isActingManager: (state): boolean =>
       state.user?.is_acting_manager === true,
+    isActingManagerValid: (state): boolean => {
+      if (!state.user?.is_acting_manager) return false;
+      if (!state.user?.acting_until) return true;
+      return new Date(state.user.acting_until) > new Date();
+    },
+    actingUntilDate: (state): Date | null => {
+      if (!state.user?.acting_until) return null;
+      return new Date(state.user.acting_until);
+    },
   },
 
   actions: {

@@ -10,9 +10,9 @@ export enum Gender {
 }
 
 export enum EmployeeStatus {
-  ACTIVE = 'active',
-  INACTIVE = 'inactive',
-  RESIGNED = 'resigned',
+  WORKING = 'working', // Đi làm
+  RETIRED = 'retired', // Nghỉ hưu
+  RESIGNED = 'resigned', // Nghỉ việc
 }
 
 @Schema({ timestamps: true, collection: 'employees' })
@@ -45,22 +45,28 @@ export class Employee {
   @Prop({ type: String, trim: true, default: null })
   declare address: string | null;
 
-  @Prop({ type: String, trim: true, default: null })
-  declare position: string | null;
+  @Prop({
+    type: String,
+    trim: true,
+    default: 'Nhân viên',
+  })
+  declare position: string;
 
   @Prop({ type: Types.ObjectId, ref: 'Department', required: true })
   declare department_id: Types.ObjectId;
 
   @Prop({ type: Date, required: true })
   declare join_date: Date;
+
   @Prop({ type: Date, default: null })
   declare end_date: Date | null;
-  @Prop({
-    type: String,
-    enum: EmployeeStatus,
-    default: EmployeeStatus.ACTIVE,
-  })
-  declare status: EmployeeStatus;
+
+  /**
+   * null  — chưa xác định (tài khoản chưa được Admin kích hoạt)
+   * HR cập nhật sau khi Admin kích hoạt tài khoản.
+   */
+  @Prop({ type: String, enum: EmployeeStatus, default: null })
+  declare status: EmployeeStatus | null;
 }
 
 export const EmployeeSchema = SchemaFactory.createForClass(Employee);

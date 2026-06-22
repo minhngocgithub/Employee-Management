@@ -10,7 +10,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { EmployeesService } from './employees.service';
+import { EmployeesService } from '../employees/employees.service';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { CreateEmployeeResponseDto } from './dto/create-employee-response.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';

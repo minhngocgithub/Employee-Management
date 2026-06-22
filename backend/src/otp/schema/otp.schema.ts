@@ -34,8 +34,8 @@ export class Otp {
   @Prop({
     type: Date,
     required: true,
-    default: () => new Date(Date.now() + 2 * 60 * 1000), // Expires in 2 minutes
-    index: { expireAfterSeconds: 120 },
+    default: () => new Date(Date.now() + 2 * 60 * 1000), // Thời gian hết hạn là 2 phút sau
+    expires: 0, // Sửa tại đây: Chỉ định TTL index xóa ngay lập tức (0 giây) khi đạt mốc expires_at
   })
   declare expires_at: Date;
 
@@ -69,4 +69,3 @@ export const OtpSchema = SchemaFactory.createForClass(Otp);
 OtpSchema.index({ account_id: 1, type: 1 });
 OtpSchema.index({ email: 1, type: 1 });
 OtpSchema.index({ code: 1 });
-OtpSchema.index({ expires_at: 1 }, { expireAfterSeconds: 0 }); // TTL index

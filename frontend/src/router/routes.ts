@@ -45,7 +45,7 @@ const routes: RouteRecordRaw[] = [
         path: 'employees',
         name: 'employees',
         component: () => import('pages/employee/EmployeesPage.vue'),
-        meta: { roles: ['admin', 'hr', 'manager'] },
+        meta: { roles: ['admin', 'hr', 'manager', 'manager_hr'] },
       },
       {
         path: 'departments',
@@ -57,7 +57,7 @@ const routes: RouteRecordRaw[] = [
         path: 'my-leave-requests',
         name: 'my-leave-requests',
         component: () => import('pages/leave-request/MyLeaveRequestsPage.vue'),
-        meta: { roles: ['employee', 'manager', 'hr'] },
+        meta: { roles: ['employee', 'manager', 'hr', 'manager_hr'] },
       },
       {
         path: 'leave-requests',

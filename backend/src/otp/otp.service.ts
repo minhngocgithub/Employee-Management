@@ -8,7 +8,11 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import { Otp, OtpDocument } from './schema/otp.schema';
-import { Account, AccountDocument } from '../accounts/schema/account.schema';
+import {
+  Account,
+  AccountDocument,
+  AccountStatus,
+} from '../accounts/schema/account.schema';
 import { Employee } from '../employees/schema/employee.schema';
 import { MailService } from '../mail/mail.service';
 
@@ -52,7 +56,7 @@ export class OtpService {
       };
     }
 
-    if (!account.is_active) {
+    if (account.status !== AccountStatus.ACTIVE) {
       throw new BadRequestException('Tài khoản này đã bị khóa');
     }
 
@@ -76,14 +80,10 @@ export class OtpService {
 
     await otp.save();
 
-    // Send OTP email
-    try {
-      this.mailService.sendOtpEmail(account.email, code);
-      this.logger.log(`OTP sent successfully to ${account.email}`);
-    } catch (error) {
-      this.logger.error(`Failed to send OTP email to ${account.email}`, error);
-      // Don't throw error - OTP is still stored and can be used
-    }
+    // Gửi OTP email — không block response, lỗi chỉ log
+    this.mailService.sendOtpEmail(account.email, code).catch((err: unknown) => {
+      this.logger.error(`Gửi OTP email thất bại tới ${account.email}`, err);
+    });
 
     return {
       message: 'Mã OTP đã được gửi đến email của bạn',
@@ -191,21 +191,24 @@ export class OtpService {
       { is_used: true, used_at: new Date() },
     );
 
-    // Send confirmation email
-    try {
-      const populated = await this.accountModel
-        .findById(account._id)
-        .populate<{ employee_id: Employee | null }>('employee_id')
-        .lean();
-      const fullName = populated?.employee_id?.full_name ?? 'Người dùng';
-      this.mailService.sendPasswordResetConfirmation(account.email, fullName);
-    } catch (error) {
-      this.logger.error(
-        `Failed to send confirmation email to ${account.email}`,
-        error,
-      );
-      // Don't throw - password was reset successfully
-    }
+    // Gửi email xác nhận — không block response, lỗi chỉ log
+    this.accountModel
+      .findById(account._id)
+      .populate<{ employee_id: Employee | null }>('employee_id')
+      .lean()
+      .then((populated) => {
+        const fullName = populated?.employee_id?.full_name ?? 'Người dùng';
+        return this.mailService.sendPasswordResetConfirmation(
+          account.email,
+          fullName,
+        );
+      })
+      .catch((err: unknown) => {
+        this.logger.error(
+          `Gửi confirmation email thất bại tới ${account.email}`,
+          err,
+        );
+      });
 
     return { message: 'Đặt lại mật khẩu thành công' };
   }
