@@ -27,9 +27,20 @@
             </div>
 
             <div class="col-12 col-md-3">
-              <q-select v-model="filterStatus" outlined dense options-dense :options="statusOptions"
-                option-label="label" option-value="value" emit-value map-options label="Trạng thái" clearable
-                @update:model-value="onFilterChange" />
+              <q-select 
+                v-model="filterStatus" 
+                outlined 
+                dense 
+                options-dense 
+                :options="EMPLOYEE_STATUS_OPTIONS"
+                option-label="label" 
+                option-value="value" 
+                emit-value 
+                map-options 
+                label="Trạng thái" 
+                clearable
+                @update:model-value="onFilterChange" 
+              />
             </div>
 
             <div class="col-12 col-md-3">
@@ -130,6 +141,11 @@ import EditEmployeeDialog from 'src/components/employees/EditEmployeeDialog.vue'
 import DelegationDialog from 'src/components/employees/DelegationDialog.vue';
 
 import { useAlert } from 'src/composables/useAlert';
+import { 
+  EMPLOYEE_STATUS_OPTIONS,
+  getEmployeeStatusLabel,
+  getEmployeeStatusColor,
+} from 'src/composables/useEmployeeLabels';
 
 import type { Employee, EmployeeStatus, Department } from 'src/types/api.types';
 import { useDebounceFn } from '@vueuse/core';
@@ -150,13 +166,6 @@ const searchText = ref('');
 const canCreateEmployee = computed(() => authStore.role !== 'manager');
 
 const filterStatus = ref<EmployeeStatus | 'all' | undefined>(undefined);
-
-const statusOptions = [
-  { label: 'Đang làm việc', value: 'working' },
-  { label: 'Nghỉ hưu',      value: 'retired' },
-  { label: 'Nghỉ việc',     value: 'resigned' },
-  { label: 'Tất cả',        value: 'all' },
-];
 
 const pagination = ref({
   sortBy: null,
@@ -203,20 +212,11 @@ const columns = [
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function statusColor(status: EmployeeStatus): string {
-  switch (status) {
-    case 'working':  return 'green';
-    case 'retired':  return 'blue';
-    case 'resigned': return 'orange';
-    default:         return 'grey';
-  }
+  return getEmployeeStatusColor(status);
 }
 
 function statusLabel(status: EmployeeStatus): string {
-  switch (status) {
-    case 'working':  return 'Đang làm việc';
-    case 'retired':  return 'Nghỉ hưu';
-    case 'resigned': return 'Nghỉ việc';
-    default:         return 'Chưa kích hoạt';
+  return getEmployeeStatusLabel(status);
   }
 }
 
