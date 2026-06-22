@@ -2,14 +2,14 @@
   <q-page class="q-pa-md page-container">
     <div class="row items-center q-mb-lg">
       <div class="col">
-        <h1 class="text-h4 q-my-none">Quản lý Nhân viên</h1>
+        <h1 class="text-h4 q-my-none">{{ $t('employees.title') }}</h1>
         <p class="text-subtitle2 text-grey-7 q-mt-xs">
-          Quản lý thông tin và tài khoản nhân viên
+          {{ $t('employees.subtitle') }}
         </p>
       </div>
 
       <div v-if="canCreateEmployee" class="col-auto">
-        <q-btn color="primary" label="Thêm nhân viên" icon="add" @click="openCreateDialog" :disable="loading" />
+        <q-btn color="primary" :label="$t('employees.addNew')" icon="add" @click="openCreateDialog" :disable="loading" />
       </div>
     </div>
 
@@ -19,7 +19,7 @@
         <q-card-section>
           <div class="row q-col-gutter-md">
             <div class="col-12 col-md-6">
-              <q-input v-model="searchText" outlined dense placeholder="Tìm kiếm theo email hoặc tên..." clearable>
+              <q-input v-model="searchText" outlined dense :placeholder="$t('employees.search')" clearable>
                 <template #prepend>
                   <q-icon name="search" />
                 </template>
@@ -27,13 +27,24 @@
             </div>
 
             <div class="col-12 col-md-3">
-              <q-select v-model="filterStatus" outlined dense options-dense :options="statusOptions"
-                option-label="label" option-value="value" emit-value map-options label="Trạng thái" clearable
-                @update:model-value="onFilterChange" />
+              <q-select 
+                v-model="filterStatus" 
+                outlined 
+                dense 
+                options-dense 
+                :options="EMPLOYEE_STATUS_OPTIONS"
+                option-label="label" 
+                option-value="value" 
+                emit-value 
+                map-options 
+                :label="$t('common.status')" 
+                clearable
+                @update:model-value="onFilterChange" 
+              />
             </div>
 
             <div class="col-12 col-md-3">
-              <q-btn outline color="primary" label="Tải lại" icon="refresh" @click="loadEmployees" :loading="loading"
+              <q-btn outline color="primary" :label="$t('common.reload')" icon="refresh" @click="loadEmployees" :loading="loading"
                 class="full-width" />
             </div>
           </div>
@@ -76,7 +87,7 @@
                     clickable v-close-popup
                     @click="toggleActive(props.row)"
                   >
-                    <q-item-section>Đánh dấu đã nghỉ việc</q-item-section>
+                    <q-item-section>{{ $t('employees.markResigned') }}</q-item-section>
                   </q-item>
 
                   <!-- Delegation option — chỉ manager của phòng ban này -->
@@ -85,7 +96,7 @@
                     clickable v-close-popup
                     @click="openDelegationDialog(props.row)"
                   >
-                    <q-item-section>Ủy quyền</q-item-section>
+                    <q-item-section>{{ $t('employees.delegate') }}</q-item-section>
                   </q-item>
 
                   <!-- Revoke delegation — chỉ khi nhân viên này đang là acting manager -->
@@ -130,6 +141,11 @@ import EditEmployeeDialog from 'src/components/employees/EditEmployeeDialog.vue'
 import DelegationDialog from 'src/components/employees/DelegationDialog.vue';
 
 import { useAlert } from 'src/composables/useAlert';
+import { 
+  EMPLOYEE_STATUS_OPTIONS,
+  getEmployeeStatusLabel,
+  getEmployeeStatusColor,
+} from 'src/composables/useEmployeeLabels';
 
 import type { Employee, EmployeeStatus, Department } from 'src/types/api.types';
 import { useDebounceFn } from '@vueuse/core';
@@ -150,13 +166,6 @@ const searchText = ref('');
 const canCreateEmployee = computed(() => authStore.role !== 'manager');
 
 const filterStatus = ref<EmployeeStatus | 'all' | undefined>(undefined);
-
-const statusOptions = [
-  { label: 'Đang làm việc', value: 'working' },
-  { label: 'Nghỉ hưu',      value: 'retired' },
-  { label: 'Nghỉ việc',     value: 'resigned' },
-  { label: 'Tất cả',        value: 'all' },
-];
 
 const pagination = ref({
   sortBy: null,
@@ -203,20 +212,11 @@ const columns = [
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function statusColor(status: EmployeeStatus): string {
-  switch (status) {
-    case 'working':  return 'green';
-    case 'retired':  return 'blue';
-    case 'resigned': return 'orange';
-    default:         return 'grey';
-  }
+  return getEmployeeStatusColor(status);
 }
 
 function statusLabel(status: EmployeeStatus): string {
-  switch (status) {
-    case 'working':  return 'Đang làm việc';
-    case 'retired':  return 'Nghỉ hưu';
-    case 'resigned': return 'Nghỉ việc';
-    default:         return 'Chưa kích hoạt';
+  return getEmployeeStatusLabel(status);
   }
 }
 
