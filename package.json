@@ -1,5 +1,6 @@
 {
   "dependencies": {
-    "local-ssl-proxy": "^2.0.5"
+    "local-ssl-proxy": "^2.0.5",
+    "src": "^1.1.2"
   }
 }

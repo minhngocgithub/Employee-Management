@@ -10,6 +10,27 @@ export interface PaginatedResult<T> {
 export type AccountStatus = 'inactive' | 'active' | 'locked';
 export type Role = 'admin' | 'hr' | 'manager' | 'employee' | 'manager_hr';
 
+export interface Account {
+  _id: string;
+  email: string;
+  role: Role;
+  status: AccountStatus;
+  failed_login_attempts: number;
+  department_id: string;
+  employee_id?: string | null;
+  is_first_login: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface QueryAccountDto {
+  role?: Role;
+  search?: string;
+  status?: AccountStatus;
+  page?: number;
+  limit?: number;
+}
+
 // ========== Employee Types ==========
 /**
  * null  = chưa xác định (tài khoản chưa được Admin kích hoạt)

@@ -1,31 +1,18 @@
 import { api } from 'src/lib/http';
-import type { PaginatedResult } from 'src/types/api.types';
-
-export interface Account {
-  _id: string;
-  email: string;
-  role: 'admin' | 'hr' | 'manager' | 'employee';
-  is_active: boolean;
-  department_id: string;
-  employee_id?: string;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-export interface QueryAccountDto {
-  role?: string;
-  search?: string;
-  is_active?: boolean;
-  page?: number;
-  limit?: number;
-}
+import type { 
+  PaginatedResult,
+  Account,
+  QueryAccountDto,
+  AccountStatus,
+  Role,
+} from 'src/types/api.types';
 
 export interface ResetPasswordDto {
   newPassword: string;
 }
 
 export interface UpdateRoleDto {
-  role: 'admin' | 'hr' | 'manager' | 'employee';
+  role: Role;
 }
 
 export const accountsApi = {
@@ -36,7 +23,7 @@ export const accountsApi = {
   create(dto: {
     email: string;
     password: string;
-    role: string;
+    role: Role;
     department_id: string;
   }): Promise<Account> {
     return api.post<Account>('/accounts', dto).then((res) => res.data);
@@ -45,6 +32,7 @@ export const accountsApi = {
   /**
    * GET /accounts
    * List all accounts (Admin only, with pagination)
+   * Query params: role, search, status, page, limit
    */
   list(query?: QueryAccountDto): Promise<PaginatedResult<Account>> {
     return api
@@ -71,12 +59,22 @@ export const accountsApi = {
   },
 
   /**
-   * PATCH /accounts/:id/toggle-active
-   * Toggle account active status (Admin only)
+   * PATCH /accounts/:id/activate
+   * Activate account from INACTIVE or LOCKED to ACTIVE (Admin only)
    */
-  toggleActive(id: string): Promise<Account> {
+  activate(id: string): Promise<Account> {
     return api
-      .patch<Account>(`/accounts/${id}/toggle-active`)
+      .patch<Account>(`/accounts/${id}/activate`)
+      .then((res) => res.data);
+  },
+
+  /**
+   * PATCH /accounts/:id/lock
+   * Lock an ACTIVE account to LOCKED status (Admin only)
+   */
+  lock(id: string): Promise<Account> {
+    return api
+      .patch<Account>(`/accounts/${id}/lock`)
       .then((res) => res.data);
   },
 
