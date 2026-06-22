@@ -1,71 +1,95 @@
+import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import type { LeaveStatus, LeaveType } from 'src/types/api.types';
 
-// ─── Options cho dropdown/filter ─────────────────────────────────────────────
+// ─── Composable para sa i18n translations ─────────────────────────────────────
+
+export function useLeaveRequestI18n() {
+  const { t } = useI18n();
+
+  const LEAVE_TYPE_OPTIONS = computed(() => [
+    { label: t('leaveType.annual'), value: 'annual' as LeaveType },
+    { label: t('leaveType.sick'), value: 'sick' as LeaveType },
+    { label: t('leaveType.unpaid'), value: 'unpaid' as LeaveType },
+    { label: t('leaveType.maternity'), value: 'maternity' as LeaveType },
+    { label: t('leaveType.other_leave'), value: 'other_leave' as LeaveType },
+    { label: t('leaveType.wfh'), value: 'wfh' as LeaveType },
+    { label: t('leaveType.shift_change'), value: 'shift_change' as LeaveType },
+    { label: t('leaveType.late_early'), value: 'late_early' as LeaveType },
+    { label: t('leaveType.overtime'), value: 'overtime' as LeaveType },
+    { label: t('leaveType.attendance_correction'), value: 'attendance_correction' as LeaveType },
+    { label: t('leaveType.business_trip'), value: 'business_trip' as LeaveType },
+    { label: t('leaveType.salary_advance'), value: 'salary_advance' as LeaveType },
+    { label: t('leaveType.resignation'), value: 'resignation' as LeaveType },
+  ]);
+
+  const LEAVE_STATUS_OPTIONS = computed(() => [
+    { label: t('leaveStatus.pending'), value: 'pending' as LeaveStatus },
+    { label: t('leaveStatus.approved'), value: 'approved' as LeaveStatus },
+    { label: t('leaveStatus.rejected'), value: 'rejected' as LeaveStatus },
+    { label: t('leaveStatus.cancelled'), value: 'cancelled' as LeaveStatus },
+  ]);
+
+  return {
+    LEAVE_TYPE_OPTIONS,
+    LEAVE_STATUS_OPTIONS,
+  };
+}
+
+// ─── Fallback Options (English) para sa backward compatibility ─────────────────
 
 export const LEAVE_TYPE_OPTIONS: { label: string; value: LeaveType }[] = [
-  // Nhóm 1 — Nghỉ phép & vắng mặt
-  { label: 'Nghỉ phép năm',    value: 'annual' },
-  { label: 'Nghỉ ốm',          value: 'sick' },
-  { label: 'Nghỉ không lương', value: 'unpaid' },
-  { label: 'Nghỉ thai sản',    value: 'maternity' },
-  { label: 'Nghỉ khác',        value: 'other_leave' },
-  // Nhóm 2 — Chấm công & thời gian làm việc
-  { label: 'Làm việc từ xa',        value: 'wfh' },
-  { label: 'Đổi ca',                value: 'shift_change' },
-  { label: 'Đi muộn / Về sớm',      value: 'late_early' },
-  { label: 'Đăng ký làm thêm',      value: 'overtime' },
-  { label: 'Cập nhật công',         value: 'attendance_correction' },
-  // Nhóm 3 — Tài chính & công tác
-  { label: 'Công tác',       value: 'business_trip' },
-  { label: 'Tạm ứng lương', value: 'salary_advance' },
-  // Nhóm 4 — Quan hệ lao động
-  { label: 'Thôi việc', value: 'resignation' },
+  { label: 'Annual Leave', value: 'annual' },
+  { label: 'Sick Leave', value: 'sick' },
+  { label: 'Unpaid Leave', value: 'unpaid' },
+  { label: 'Maternity Leave', value: 'maternity' },
+  { label: 'Other Leave', value: 'other_leave' },
+  { label: 'Work From Home', value: 'wfh' },
+  { label: 'Shift Change', value: 'shift_change' },
+  { label: 'Late/Early', value: 'late_early' },
+  { label: 'Overtime', value: 'overtime' },
+  { label: 'Attendance Correction', value: 'attendance_correction' },
+  { label: 'Business Trip', value: 'business_trip' },
+  { label: 'Salary Advance', value: 'salary_advance' },
+  { label: 'Resignation', value: 'resignation' },
 ];
 
 export const LEAVE_STATUS_OPTIONS: { label: string; value: LeaveStatus }[] = [
-  { label: 'Chờ duyệt', value: 'pending' },
-  { label: 'Đã duyệt',  value: 'approved' },
-  { label: 'Từ chối',   value: 'rejected' },
-  { label: 'Đã hủy',   value: 'cancelled' },
+  { label: 'Pending', value: 'pending' },
+  { label: 'Approved', value: 'approved' },
+  { label: 'Rejected', value: 'rejected' },
+  { label: 'Cancelled', value: 'cancelled' },
 ];
 
-// ─── Label maps ───────────────────────────────────────────────────────────────
+// ─── Label maps (English fallback) ───────────────────────────────────────────
 
-/**
- * Record<LeaveType, string> — phải có đủ 13 key khớp với LeaveType enum.
- * Thiếu key → TypeScript lỗi compile → Vite hot reload crash → store reset → token mất.
- */
 const LEAVE_TYPE_LABELS: Record<LeaveType, string> = {
-  // Nhóm 1
-  annual:      'Nghỉ phép năm',
-  sick:        'Nghỉ ốm',
-  unpaid:      'Nghỉ không lương',
-  maternity:   'Nghỉ thai sản',
-  other_leave: 'Nghỉ khác',
-  // Nhóm 2
-  wfh:                   'Làm việc từ xa',
-  shift_change:          'Đổi ca',
-  late_early:            'Đi muộn / Về sớm',
-  overtime:              'Đăng ký làm thêm',
-  attendance_correction: 'Cập nhật công',
-  // Nhóm 3
-  business_trip:  'Công tác',
-  salary_advance: 'Tạm ứng lương',
-  // Nhóm 4
-  resignation: 'Thôi việc',
+  annual: 'Annual Leave',
+  sick: 'Sick Leave',
+  unpaid: 'Unpaid Leave',
+  maternity: 'Maternity Leave',
+  other_leave: 'Other Leave',
+  wfh: 'Work From Home',
+  shift_change: 'Shift Change',
+  late_early: 'Late/Early',
+  overtime: 'Overtime',
+  attendance_correction: 'Attendance Correction',
+  business_trip: 'Business Trip',
+  salary_advance: 'Salary Advance',
+  resignation: 'Resignation',
 };
 
 const LEAVE_STATUS_LABELS: Record<LeaveStatus, string> = {
-  pending:   'Chờ duyệt',
-  approved:  'Đã duyệt',
-  rejected:  'Từ chối',
-  cancelled: 'Đã hủy',
+  pending: 'Pending',
+  approved: 'Approved',
+  rejected: 'Rejected',
+  cancelled: 'Cancelled',
 };
 
 const LEAVE_STATUS_COLORS: Record<LeaveStatus, string> = {
-  pending:   'orange',
-  approved:  'green',
-  rejected:  'red',
+  pending: 'orange',
+  approved: 'green',
+  rejected: 'red',
   cancelled: 'grey',
 };
 

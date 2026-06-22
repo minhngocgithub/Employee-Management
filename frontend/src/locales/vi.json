@@ -1,0 +1,267 @@
+{
+  "common": {
+    "add": "Thêm",
+    "create": "Tạo",
+    "edit": "Chỉnh sửa",
+    "delete": "Xoá",
+    "save": "Lưu",
+    "cancel": "Hủy",
+    "search": "Tìm kiếm",
+    "reload": "Tải lại",
+    "noData": "Không có dữ liệu",
+    "loading": "Đang tải...",
+    "error": "Lỗi",
+    "success": "Thành công",
+    "warning": "Cảnh báo",
+    "logout": "Đăng xuất",
+    "name": "Tên",
+    "email": "Email",
+    "description": "Mô tả",
+    "status": "Trạng thái",
+    "action": "Hành động",
+    "actions": "Hành động",
+    "createdAt": "Ngày tạo",
+    "updatedAt": "Ngày cập nhật",
+    "total": "Tổng",
+    "all": "Tất cả"
+  },
+
+  "navigation": {
+    "dashboard": "Bảng điều khiển",
+    "management": "Quản lý",
+    "system": "Hệ thống",
+    "employees": "Nhân viên",
+    "departments": "Phòng ban",
+    "leaveRequests": "Đơn xin nghỉ phép",
+    "myLeaveRequests": "Đơn xin nghỉ phép của tôi",
+    "auditLogs": "Nhật ký hoạt động",
+    "loginHistory": "Lịch sử đăng nhập",
+    "profile": "Thông tin cá nhân",
+    "changePassword": "Đổi mật khẩu"
+  },
+
+  "leaveStatus": {
+    "pending": "Chờ duyệt",
+    "approved": "Đã duyệt",
+    "rejected": "Từ chối",
+    "cancelled": "Đã hủy"
+  },
+
+  "leaveType": {
+    "annual": "Nghỉ phép năm",
+    "sick": "Nghỉ ốm",
+    "unpaid": "Nghỉ không lương",
+    "maternity": "Nghỉ thai sản",
+    "other_leave": "Nghỉ khác",
+    "wfh": "Làm việc từ xa",
+    "shift_change": "Đổi ca",
+    "late_early": "Đi muộn / Về sớm",
+    "overtime": "Đăng ký làm thêm",
+    "attendance_correction": "Cập nhật công",
+    "business_trip": "Công tác",
+    "salary_advance": "Tạm ứng lương",
+    "resignation": "Thôi việc",
+    "other": "Khác"
+  },
+
+  "employeeStatus": {
+    "working": "Đang làm việc",
+    "retired": "Nghỉ hưu",
+    "resigned": "Nghỉ việc",
+    "inactive": "Chưa kích hoạt"
+  },
+
+  "accountStatus": {
+    "active": "Hoạt động",
+    "inactive": "Chưa kích hoạt",
+    "locked": "Bị khóa"
+  },
+
+  "roles": {
+    "admin": "Quản trị viên",
+    "hr": "Nhân sự",
+    "manager": "Quản lý",
+    "employee": "Nhân viên",
+    "managerHr": "Quản lý & Nhân sự"
+  },
+
+  "dashboard": {
+    "adminDashboard": "Bảng điều khiển quản trị",
+    "managerDashboard": "Bảng điều khiển quản lý",
+    "managerDashboardSubtitle": "Thống kê phòng ban của bạn",
+    "manageSystem": "Quản lý toàn hệ thống",
+    "totalEmployees": "Tổng nhân viên",
+    "departments": "Phòng ban",
+    "totalRequests": "Tổng đơn",
+    "pending": "Chờ duyệt",
+    "approved": "Đã duyệt",
+    "rejected": "Từ chối",
+    "awaitingAction": "Chờ xử lý",
+    "completed": "Hoàn tất",
+    "declined": "Đã từ chối",
+    "activeUnits": "Phòng ban hoạt động",
+    "allTime": "Toàn thời gian",
+    "distributionByDepartment": "Phân bố nhân viên theo phòng ban",
+    "requestStatus": "Trạng thái đơn",
+    "requestTypes": "Loại đơn",
+    "leaveStatsThisMonth": "Thống kê nghỉ phép tháng này",
+    "recentActivities": "Hoạt động gần đây",
+    "working": "đang làm việc"
+  },
+
+  "employees": {
+    "title": "Quản lý Nhân viên",
+    "subtitle": "Quản lý thông tin và tài khoản nhân viên",
+    "addNew": "Thêm nhân viên mới",
+    "edit": "Chỉnh sửa nhân viên",
+    "delete": "Xoá nhân viên",
+    "search": "Tìm kiếm theo tên hoặc email",
+    "noEmployees": "Không có nhân viên",
+    "markResigned": "Đánh dấu đã nghỉ việc",
+    "delegate": "Ủy quyền",
+    "manageDelegation": "Quản lý ủy quyền",
+    "columns": {
+      "name": "Tên",
+      "email": "Email",
+      "department": "Phòng ban",
+      "status": "Trạng thái",
+      "role": "Chức vụ",
+      "createdAt": "Ngày tạo"
+    },
+    "filters": {
+      "department": "Phòng ban",
+      "status": "Trạng thái",
+      "search": "Tìm kiếm"
+    },
+    "messages": {
+      "createSuccess": "Tạo nhân viên thành công",
+      "updateSuccess": "Cập nhật nhân viên thành công",
+      "deleteSuccess": "Xoá nhân viên thành công",
+      "deleteFailed": "Xoá nhân viên thất bại"
+    }
+  },
+
+  "leaveRequests": {
+    "title": "Quản lý Đơn xin nghỉ phép",
+    "subtitle": "Xem và duyệt đơn nghỉ phép của nhân viên",
+    "myRequests": "Đơn xin nghỉ phép của tôi",
+    "createNew": "Tạo đơn mới",
+    "review": "Duyệt",
+    "approve": "Duyệt",
+    "approveBtn": "Duyệt",
+    "reject": "Từ chối",
+    "rejectBtn": "Từ chối",
+    "cancel": "Hủy",
+    "noRequests": "Không có đơn xin nghỉ phép",
+    "columns": {
+      "employee": "Nhân viên",
+      "type": "Loại",
+      "startDate": "Ngày bắt đầu",
+      "endDate": "Ngày kết thúc",
+      "days": "Số ngày",
+      "reason": "Lý do",
+      "status": "Trạng thái",
+      "createdAt": "Ngày tạo"
+    },
+    "filters": {
+      "type": "Loại",
+      "status": "Trạng thái",
+      "employee": "Nhân viên",
+      "from": "Từ",
+      "to": "Đến"
+    },
+    "messages": {
+      "createSuccess": "Tạo đơn thành công",
+      "updateSuccess": "Cập nhật đơn thành công",
+      "approveSuccess": "Duyệt đơn thành công",
+      "rejectSuccess": "Từ chối đơn thành công",
+      "cancelSuccess": "Hủy đơn thành công"
+    },
+    "dialog": {
+      "title": "Duyệt Đơn Xin Nghỉ Phép",
+      "reason": "Lý do",
+      "note": "Ghi chú của bạn",
+      "approveBtn": "Duyệt",
+      "rejectBtn": "Từ chối"
+    }
+  },
+
+  "departments": {
+    "title": "Quản lý Phòng ban",
+    "subtitle": "Quản lý cấu trúc tổ chức và các phòng ban",
+    "addNew": "Thêm phòng ban mới",
+    "edit": "Chỉnh sửa phòng ban",
+    "delete": "Xoá phòng ban",
+    "noDepartments": "Không có phòng ban",
+    "search": "Tìm kiếm phòng ban",
+    "columns": {
+      "name": "Tên",
+      "description": "Mô tả",
+      "manager": "Quản lý",
+      "employees": "Nhân viên",
+      "status": "Trạng thái"
+    },
+    "messages": {
+      "createSuccess": "Tạo phòng ban thành công",
+      "updateSuccess": "Cập nhật phòng ban thành công",
+      "deleteSuccess": "Xoá phòng ban thành công"
+    }
+  },
+
+  "account": {
+    "changePassword": "Đổi Mật Khẩu",
+    "currentPassword": "Mật khẩu cũ",
+    "newPassword": "Mật khẩu mới",
+    "confirmPassword": "Xác nhận mật khẩu mới",
+    "change": "Đổi mật khẩu",
+    "messages": {
+      "changeSuccess": "Đổi mật khẩu thành công",
+      "changeFailed": "Đổi mật khẩu thất bại",
+      "passwordMismatch": "Mật khẩu không khớp"
+    }
+  },
+
+  "auditLogs": {
+    "title": "Nhật Ký Hoạt Động",
+    "columns": {
+      "timestamp": "Thời gian",
+      "user": "Người dùng",
+      "action": "Hành động",
+      "details": "Chi tiết",
+      "ip": "Địa chỉ IP"
+    },
+    "filters": {
+      "user": "Người dùng",
+      "action": "Hành động",
+      "from": "Từ",
+      "to": "Đến"
+    }
+  },
+
+  "loginHistory": {
+    "title": "Lịch Sử Đăng Nhập",
+    "columns": {
+      "timestamp": "Thời gian",
+      "user": "Người dùng",
+      "ip": "Địa chỉ IP",
+      "status": "Trạng thái",
+      "action": "Hành động"
+    },
+    "statuses": {
+      "success": "Thành công",
+      "failed": "Thất bại"
+    },
+    "actions": {
+      "login": "Đăng nhập",
+      "logout": "Đăng xuất"
+    }
+  },
+
+  "forms": {
+    "required": "Trường này là bắt buộc",
+    "invalidEmail": "Địa chỉ email không hợp lệ",
+    "passwordTooShort": "Mật khẩu phải có ít nhất 8 ký tự",
+    "submit": "Gửi",
+    "cancel": "Hủy"
+  }
+}

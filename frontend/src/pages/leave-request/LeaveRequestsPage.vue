@@ -2,13 +2,13 @@
   <q-page class="q-pa-md page-container">
     <div class="row items-center q-mb-lg">
       <div class="col">
-        <h1 class="text-h4 q-my-none">Duyệt đơn nghỉ phép</h1>
+        <h1 class="text-h4 q-my-none">{{ $t('leaveRequests.title') }}</h1>
         <p class="text-subtitle2 text-grey-7 q-mt-xs">
-          Xem và duyệt đơn nghỉ phép của nhân viên
+          {{ $t('leaveRequests.subtitle') }}
         </p>
       </div>
       <div class="col-auto">
-        <q-btn flat dense icon="refresh" label="Tải lại" :loading="loading" @click="loadRequests" />
+        <q-btn flat dense icon="refresh" :label="$t('common.reload')" :loading="loading" @click="loadRequests" />
       </div>
     </div>
 
@@ -16,11 +16,11 @@
       <q-card-section>
         <div class="row q-col-gutter-md">
           <div class="col-12 col-md-3">
-            <q-select v-model="filterStatus" outlined dense :options="LEAVE_STATUS_OPTIONS" label="Trạng thái"
+            <q-select v-model="filterStatus" outlined dense :options="LEAVE_STATUS_OPTIONS" :label="$t('common.status')"
               emit-value map-options clearable @update:model-value="onFilterChange" />
           </div>
           <div class="col-12 col-md-3">
-            <q-select v-model="filterLeaveType" outlined dense :options="LEAVE_TYPE_OPTIONS" label="Loại nghỉ"
+            <q-select v-model="filterLeaveType" outlined dense :options="LEAVE_TYPE_OPTIONS" :label="$t('leaveRequests.filters.type')"
               emit-value map-options clearable @update:model-value="onFilterChange" />
           </div>
         </div>
@@ -67,9 +67,9 @@
         <template #body-cell-actions="props">
           <q-td :props="props">
             <template v-if="props.row.status === 'pending'">
-              <q-btn flat dense color="positive" label="Duyệt" size="sm"
+              <q-btn flat dense color="positive" :label="$t('leaveRequests.approveBtn')" size="sm"
                 @click="openReviewDialog(props.row, 'approve')" />
-              <q-btn flat dense color="negative" label="Từ chối" size="sm"
+              <q-btn flat dense color="negative" :label="$t('leaveRequests.rejectBtn')" size="sm"
                 @click="openReviewDialog(props.row, 'reject')" />
             </template>
             <span v-else class="text-grey-6">—</span>

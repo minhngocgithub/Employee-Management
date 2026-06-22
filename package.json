@@ -1,6 +1,9 @@
 {
   "dependencies": {
     "local-ssl-proxy": "^2.0.5",
-    "src": "^1.1.2"
+    "quasar": "^2.20.1",
+    "src": "^1.1.2",
+    "vue": "^3.5.38",
+    "vue-i18n": "^11.4.6"
   }
 }

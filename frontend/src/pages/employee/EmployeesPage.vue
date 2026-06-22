@@ -2,14 +2,14 @@
   <q-page class="q-pa-md page-container">
     <div class="row items-center q-mb-lg">
       <div class="col">
-        <h1 class="text-h4 q-my-none">Quản lý Nhân viên</h1>
+        <h1 class="text-h4 q-my-none">{{ $t('employees.title') }}</h1>
         <p class="text-subtitle2 text-grey-7 q-mt-xs">
-          Quản lý thông tin và tài khoản nhân viên
+          {{ $t('employees.subtitle') }}
         </p>
       </div>
 
       <div v-if="canCreateEmployee" class="col-auto">
-        <q-btn color="primary" label="Thêm nhân viên" icon="add" @click="openCreateDialog" :disable="loading" />
+        <q-btn color="primary" :label="$t('employees.addNew')" icon="add" @click="openCreateDialog" :disable="loading" />
       </div>
     </div>
 
@@ -19,7 +19,7 @@
         <q-card-section>
           <div class="row q-col-gutter-md">
             <div class="col-12 col-md-6">
-              <q-input v-model="searchText" outlined dense placeholder="Tìm kiếm theo email hoặc tên..." clearable>
+              <q-input v-model="searchText" outlined dense :placeholder="$t('employees.search')" clearable>
                 <template #prepend>
                   <q-icon name="search" />
                 </template>
@@ -37,14 +37,14 @@
                 option-value="value" 
                 emit-value 
                 map-options 
-                label="Trạng thái" 
+                :label="$t('common.status')" 
                 clearable
                 @update:model-value="onFilterChange" 
               />
             </div>
 
             <div class="col-12 col-md-3">
-              <q-btn outline color="primary" label="Tải lại" icon="refresh" @click="loadEmployees" :loading="loading"
+              <q-btn outline color="primary" :label="$t('common.reload')" icon="refresh" @click="loadEmployees" :loading="loading"
                 class="full-width" />
             </div>
           </div>
@@ -87,7 +87,7 @@
                     clickable v-close-popup
                     @click="toggleActive(props.row)"
                   >
-                    <q-item-section>Đánh dấu đã nghỉ việc</q-item-section>
+                    <q-item-section>{{ $t('employees.markResigned') }}</q-item-section>
                   </q-item>
 
                   <!-- Delegation option — chỉ manager của phòng ban này -->
@@ -96,7 +96,7 @@
                     clickable v-close-popup
                     @click="openDelegationDialog(props.row)"
                   >
-                    <q-item-section>Ủy quyền</q-item-section>
+                    <q-item-section>{{ $t('employees.delegate') }}</q-item-section>
                   </q-item>
 
                   <!-- Revoke delegation — chỉ khi nhân viên này đang là acting manager -->

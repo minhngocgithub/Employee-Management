@@ -2,13 +2,13 @@
   <q-page class="q-pa-md page-container">
     <div class="row items-center q-mb-lg">
       <div class="col">
-        <h1 class="text-h4 q-my-none">Quản lý Phòng ban</h1>
+        <h1 class="text-h4 q-my-none">{{ $t('departments.title') }}</h1>
         <p class="text-subtitle2 text-grey-7 q-mt-xs">
-          Quản lý cấu trúc tổ chức và các phòng ban
+          {{ $t('departments.subtitle') }}
         </p>
       </div>
       <div v-if="canCreateDepartment" class="col-auto">
-        <q-btn color="primary" label="Thêm phòng ban" icon="add" @click="openCreateDialog" :disable="loading" />
+        <q-btn color="primary" :label="$t('departments.addNew')" icon="add" @click="openCreateDialog" :disable="loading" />
       </div>
     </div>
 
@@ -17,14 +17,14 @@
       <q-card-section>
         <div class="row q-col-gutter-md">
           <div class="col-12 col-md-6">
-            <q-input v-model="searchText" outlined dense clearable debounce="500" placeholder="Tìm kiếm phòng ban...">
+            <q-input v-model="searchText" outlined dense clearable debounce="500" :placeholder="$t('departments.search')">
               <template #prepend>
                 <q-icon name="search" />
               </template>
             </q-input>
           </div>
           <div class="col-12 col-md-6">
-            <q-btn outline color="primary" label="Tải lại" icon="refresh" @click="loadDepartments" :loading="loading"
+            <q-btn outline color="primary" :label="$t('common.reload')" icon="refresh" @click="loadDepartments" :loading="loading"
               class="full-width" />
           </div>
         </div>

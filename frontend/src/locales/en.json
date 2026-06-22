@@ -1,0 +1,267 @@
+{
+  "common": {
+    "add": "Add",
+    "create": "Create",
+    "edit": "Edit",
+    "delete": "Delete",
+    "save": "Save",
+    "cancel": "Cancel",
+    "search": "Search",
+    "reload": "Reload",
+    "noData": "No data",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "warning": "Warning",
+    "logout": "Logout",
+    "name": "Name",
+    "email": "Email",
+    "description": "Description",
+    "status": "Status",
+    "action": "Action",
+    "actions": "Actions",
+    "createdAt": "Created At",
+    "updatedAt": "Updated At",
+    "total": "Total",
+    "all": "All"
+  },
+
+  "navigation": {
+    "dashboard": "Dashboard",
+    "management": "Management",
+    "system": "System",
+    "employees": "Employees",
+    "departments": "Departments",
+    "leaveRequests": "Leave Requests",
+    "myLeaveRequests": "My Leave Requests",
+    "auditLogs": "Audit Logs",
+    "loginHistory": "Login History",
+    "profile": "Profile",
+    "changePassword": "Change Password"
+  },
+
+  "leaveStatus": {
+    "pending": "Pending",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "cancelled": "Cancelled"
+  },
+
+  "leaveType": {
+    "annual": "Annual Leave",
+    "sick": "Sick Leave",
+    "unpaid": "Unpaid Leave",
+    "maternity": "Maternity Leave",
+    "other_leave": "Other Leave",
+    "wfh": "Work From Home",
+    "shift_change": "Shift Change",
+    "late_early": "Late/Early",
+    "overtime": "Overtime",
+    "attendance_correction": "Attendance Correction",
+    "business_trip": "Business Trip",
+    "salary_advance": "Salary Advance",
+    "resignation": "Resignation",
+    "other": "Other"
+  },
+
+  "employeeStatus": {
+    "working": "Working",
+    "retired": "Retired",
+    "resigned": "Resigned",
+    "inactive": "Inactive"
+  },
+
+  "accountStatus": {
+    "active": "Active",
+    "inactive": "Inactive",
+    "locked": "Locked"
+  },
+
+  "roles": {
+    "admin": "Admin",
+    "hr": "HR",
+    "manager": "Manager",
+    "employee": "Employee",
+    "managerHr": "Manager & HR"
+  },
+
+  "dashboard": {
+    "adminDashboard": "Admin Dashboard",
+    "managerDashboard": "Manager Dashboard",
+    "managerDashboardSubtitle": "Statistics of your department",
+    "manageSystem": "Manage the entire system",
+    "totalEmployees": "Total Employees",
+    "departments": "Departments",
+    "totalRequests": "Total Requests",
+    "pending": "Pending",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "awaitingAction": "Awaiting action",
+    "completed": "Completed",
+    "declined": "Declined",
+    "activeUnits": "Active units",
+    "allTime": "All time",
+    "distributionByDepartment": "Employee Distribution by Department",
+    "requestStatus": "Request Status",
+    "requestTypes": "Request Types",
+    "leaveStatsThisMonth": "Leave Stats This Month",
+    "recentActivities": "Recent Activities",
+    "working": "working"
+  },
+
+  "employees": {
+    "title": "Employee Management",
+    "subtitle": "Manage employee information and accounts",
+    "addNew": "Add New Employee",
+    "edit": "Edit Employee",
+    "delete": "Delete Employee",
+    "search": "Search by name or email",
+    "noEmployees": "No employees found",
+    "markResigned": "Mark as Resigned",
+    "delegate": "Delegate Authority",
+    "manageDelegation": "Manage Delegation",
+    "columns": {
+      "name": "Name",
+      "email": "Email",
+      "department": "Department",
+      "status": "Status",
+      "role": "Role",
+      "createdAt": "Created At"
+    },
+    "filters": {
+      "department": "Department",
+      "status": "Status",
+      "search": "Search"
+    },
+    "messages": {
+      "createSuccess": "Employee created successfully",
+      "updateSuccess": "Employee updated successfully",
+      "deleteSuccess": "Employee deleted successfully",
+      "deleteFailed": "Failed to delete employee"
+    }
+  },
+
+  "leaveRequests": {
+    "title": "Leave Request Management",
+    "subtitle": "View and approve employee leave requests",
+    "myRequests": "My Leave Requests",
+    "createNew": "Create New Request",
+    "review": "Review",
+    "approve": "Approve",
+    "approveBtn": "Approve",
+    "reject": "Reject",
+    "rejectBtn": "Reject",
+    "cancel": "Cancel",
+    "noRequests": "No leave requests found",
+    "columns": {
+      "employee": "Employee",
+      "type": "Type",
+      "startDate": "Start Date",
+      "endDate": "End Date",
+      "days": "Days",
+      "reason": "Reason",
+      "status": "Status",
+      "createdAt": "Created At"
+    },
+    "filters": {
+      "type": "Type",
+      "status": "Status",
+      "employee": "Employee",
+      "from": "From",
+      "to": "To"
+    },
+    "messages": {
+      "createSuccess": "Leave request created successfully",
+      "updateSuccess": "Leave request updated successfully",
+      "approveSuccess": "Request approved successfully",
+      "rejectSuccess": "Request rejected successfully",
+      "cancelSuccess": "Request cancelled successfully"
+    },
+    "dialog": {
+      "title": "Review Leave Request",
+      "reason": "Reason",
+      "note": "Your Note",
+      "approveBtn": "Approve",
+      "rejectBtn": "Reject"
+    }
+  },
+
+  "departments": {
+    "title": "Department Management",
+    "subtitle": "Manage organizational structure and departments",
+    "addNew": "Add New Department",
+    "edit": "Edit Department",
+    "delete": "Delete Department",
+    "noDepartments": "No departments found",
+    "search": "Search departments",
+    "columns": {
+      "name": "Name",
+      "description": "Description",
+      "manager": "Manager",
+      "employees": "Employees",
+      "status": "Status"
+    },
+    "messages": {
+      "createSuccess": "Department created successfully",
+      "updateSuccess": "Department updated successfully",
+      "deleteSuccess": "Department deleted successfully"
+    }
+  },
+
+  "account": {
+    "changePassword": "Change Password",
+    "currentPassword": "Current Password",
+    "newPassword": "New Password",
+    "confirmPassword": "Confirm Password",
+    "change": "Change Password",
+    "messages": {
+      "changeSuccess": "Password changed successfully",
+      "changeFailed": "Failed to change password",
+      "passwordMismatch": "Passwords do not match"
+    }
+  },
+
+  "auditLogs": {
+    "title": "Audit Logs",
+    "columns": {
+      "timestamp": "Timestamp",
+      "user": "User",
+      "action": "Action",
+      "details": "Details",
+      "ip": "IP Address"
+    },
+    "filters": {
+      "user": "User",
+      "action": "Action",
+      "from": "From",
+      "to": "To"
+    }
+  },
+
+  "loginHistory": {
+    "title": "Login History",
+    "columns": {
+      "timestamp": "Timestamp",
+      "user": "User",
+      "ip": "IP Address",
+      "status": "Status",
+      "action": "Action"
+    },
+    "statuses": {
+      "success": "Success",
+      "failed": "Failed"
+    },
+    "actions": {
+      "login": "Login",
+      "logout": "Logout"
+    }
+  },
+
+  "forms": {
+    "required": "This field is required",
+    "invalidEmail": "Invalid email address",
+    "passwordTooShort": "Password must be at least 8 characters",
+    "submit": "Submit",
+    "cancel": "Cancel"
+  }
+}
