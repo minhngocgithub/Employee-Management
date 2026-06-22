@@ -7,7 +7,6 @@ import {
 } from 'class-validator';
 import { LeaveStatus } from '../schema/leave-request.schema';
 
-// Chỉ cho phép APPROVED hoặc REJECTED — không cho set PENDING/CANCELLED qua route review
 const ReviewableStatus = {
   APPROVED: LeaveStatus.APPROVED,
   REJECTED: LeaveStatus.REJECTED,
@@ -19,10 +18,16 @@ export class ReviewLeaveRequestDto {
   })
   status!: LeaveStatus.APPROVED | LeaveStatus.REJECTED;
 
-  // Bắt buộc khi status = REJECTED
+  /** Bắt buộc khi status = REJECTED */
   @ValidateIf((o: ReviewLeaveRequestDto) => o.status === LeaveStatus.REJECTED)
   @IsString()
   @IsOptional()
   @MaxLength(500)
   rejection_reason?: string;
+
+  /** Ghi chú nội bộ — chỉ ADMIN/MANAGER/HR/MANAGER_HR mới được set, service sẽ guard */
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  internal_note?: string;
 }

@@ -126,6 +126,25 @@ export class DepartmentsController {
   }
 
   /**
+   * DELETE /departments/:id/acting-manager
+   * Thu hồi ủy quyền tạm thời.
+   * - Admin: luôn được
+   * - Manager: chỉ phòng mình
+   */
+  @Roles(Role.ADMIN, Role.MANAGER)
+  @Delete(':id/acting-manager')
+  async revokeActingManager(
+    @Param('id') id: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<DepartmentDocument> {
+    return this.departmentsService.assignActingManager(
+      id,
+      { acting_manager_id: null },
+      user,
+    );
+  }
+
+  /**
    * GET /departments/:id/employees
    * Get all employees in a department
    */

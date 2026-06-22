@@ -9,7 +9,7 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AccountsService, PaginatedResult } from './accounts.service';
 import { CreateAccountDto } from './dto/create-account.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
@@ -20,10 +20,6 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { AuthenticatedUser } from '../auth/strategies/jwt-payload.interface';
 import { Role, AccountDocument } from './schema/account.schema';
 
-/**
- * Tất cả routes đều yêu cầu ADMIN.
- * JwtAuthGuard global đã xử lý xác thực.
- */
 @ApiTags('Accounts')
 @ApiBearerAuth('JWT')
 @Roles(Role.ADMIN)
@@ -38,8 +34,9 @@ export class AccountsController {
     return this.accountsService.create(dto);
   }
 
-  /** GET /accounts?role=&search=&is_active=&page=&limit= */
+  /** GET /accounts?role=&search=&status=&page=&limit= */
   @Get()
+  @ApiOperation({ summary: 'Danh sách tài khoản (US-311, US-312, US-313)' })
   async findAll(
     @Query() query: QueryAccountDto,
   ): Promise<PaginatedResult<unknown>> {
@@ -62,13 +59,34 @@ export class AccountsController {
     return this.accountsService.updateRole(id, dto, user.id);
   }
 
-  /** PATCH /accounts/:id/toggle-active */
-  @Patch(':id/toggle-active')
-  async toggleActive(
+  /**
+   * PATCH /accounts/:id/activate
+   * Admin kích hoạt tài khoản INACTIVE hoặc LOCKED → ACTIVE (US-315).
+   * Gửi SMS thông tin đăng nhập về SĐT nhân viên (xử lý ở service/SMS module).
+   */
+  @Patch(':id/activate')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Kích hoạt tài khoản (US-315)' })
+  async activate(
     @Param('id') id: string,
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<unknown> {
-    return this.accountsService.toggleActive(id, user.id);
+    return this.accountsService.activate(id, user.id);
+  }
+
+  /**
+   * PATCH /accounts/:id/lock
+   * Admin khóa tài khoản đang ACTIVE → LOCKED (US-314).
+   * Dùng khi nhân viên RETIRED/RESIGNED hoặc có vi phạm.
+   */
+  @Patch(':id/lock')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Khóa tài khoản (US-314)' })
+  async lock(
+    @Param('id') id: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<unknown> {
+    return this.accountsService.lock(id, user.id);
   }
 
   /** PATCH /accounts/:id/reset-password */

@@ -19,6 +19,9 @@
       </div>
     </div>
 
+    <!-- Acting Manager Panel -->
+    <ActingManagerLeavePanel />
+
     <div class="row q-col-gutter-md q-mb-lg">
       <div class="col-12 col-sm-6 col-md-4 animate-slide-in-up">
         <q-card class="hover-lift h-full">
@@ -31,15 +34,16 @@
         </q-card>
       </div>
 
+      <!-- FIX: active_employees → working_employees -->
       <div class="col-12 col-sm-6 col-md-4 animate-slide-in-up">
         <q-card class="hover-lift h-full">
           <q-card-section class="bg-green-1">
-            <div class="text-subtitle2 text-green-9">Đang hoạt động</div>
+            <div class="text-subtitle2 text-green-9">Đang làm việc</div>
           </q-card-section>
           <q-card-section>
-            <div class="text-h4 text-green-9">{{ stats?.active_employees ?? 0 }}</div>
+            <div class="text-h4 text-green-9">{{ stats?.working_employees ?? 0 }}</div>
             <q-linear-progress
-              :value="(stats?.active_employees ?? 0) / (stats?.total_employees || 1)"
+              :value="(stats?.working_employees ?? 0) / (stats?.total_employees || 1)"
               color="green"
               class="q-mt-md"
             />
@@ -141,6 +145,7 @@
 import { onMounted, ref } from 'vue';
 import { useAlert } from 'src/composables/useAlert';
 import { dashboardApi } from 'src/api';
+import ActingManagerLeavePanel from 'src/components/dashboards/ActingManagerLeavePanel.vue';
 import type { AdminDashboardStats, ManagerDashboardStats } from 'src/types/api.types';
 
 const { error } = useAlert();

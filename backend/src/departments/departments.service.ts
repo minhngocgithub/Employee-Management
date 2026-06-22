@@ -211,7 +211,7 @@ export class DepartmentsService {
         account_id: oldManagerAccountId,
       });
       if (oldEmployee) {
-        oldEmployee.position = null;
+        oldEmployee.position = null as unknown as string;
         await oldEmployee.save();
       }
 
@@ -228,7 +228,7 @@ export class DepartmentsService {
       const newEmployee = await this.employeeModel.findOne({
         account_id: newManagerId,
         department_id: new Types.ObjectId(departmentId),
-        status: EmployeeStatus.ACTIVE,
+        status: EmployeeStatus.WORKING,
       });
 
       if (!newEmployee) {
@@ -304,7 +304,7 @@ export class DepartmentsService {
     const employee = await this.employeeModel.findOne({
       account_id: actingId,
       department_id: dept._id,
-      status: EmployeeStatus.ACTIVE,
+      status: EmployeeStatus.WORKING,
     });
     if (!employee) {
       throw new BadRequestException(
@@ -395,7 +395,7 @@ export class DepartmentsService {
     return this.employeeModel
       .find({
         department_id: new Types.ObjectId(departmentId),
-        status: EmployeeStatus.ACTIVE,
+        status: EmployeeStatus.WORKING, // chỉ lấy nhân viên đang làm việc
       })
       .populate('account_id', 'email')
       .sort({ full_name: 1 })

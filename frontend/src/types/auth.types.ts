@@ -1,4 +1,4 @@
-export type Role = 'admin' | 'hr' | 'manager' | 'employee';
+export type Role = 'admin' | 'hr' | 'manager' | 'employee' | 'manager_hr';
 
 export interface AuthUser {
   id: string;
@@ -9,6 +9,8 @@ export interface AuthUser {
   must_change_password: boolean;
   /** true nếu đang được ủy quyền tạm thời */
   is_acting_manager: boolean;
+  /** ngày hết hạn ủy quyền (ISO string) */
+  acting_until?: string | null;
 }
 
 export interface TokenResponse {

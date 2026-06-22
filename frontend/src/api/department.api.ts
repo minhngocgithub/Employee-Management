@@ -93,15 +93,33 @@ export const departmentApi = {
   /**
    * PATCH /departments/:id/acting-manager
    * Assign or remove acting manager (must differ from manager_id)
+   * Supports future dates for delegation via acting_until
    */
   setActingManager(
     id: string,
     actingManagerId: string | null,
+    actingUntil?: string | null,
   ): Promise<Department> {
+    console.log('setActingManager args', {
+      id,
+      actingManagerId,
+      actingUntil,
+    });
     return api
       .patch<Department>(`/departments/${id}/acting-manager`, {
         acting_manager_id: actingManagerId,
+        acting_until: actingUntil || null,
       })
+      .then((res) => res.data);
+  },
+
+  /**
+   * DELETE /departments/:id/acting-manager
+   * Revoke acting manager delegation
+   */
+  revokeActingManager(id: string): Promise<Department> {
+    return api
+      .delete<Department>(`/departments/${id}/acting-manager`)
       .then((res) => res.data);
   },
 

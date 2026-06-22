@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; line-height: 1.6; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; background: #f5f5f5; }
+    .header { background: #dc2626; color: white; padding: 30px 20px; text-align: center; border-radius: 8px 8px 0 0; }
+    .content { background: white; padding: 30px; border-radius: 0 0 8px 8px; }
+    .info-box { background: #fef2f2; border: 2px solid #dc2626; padding: 25px; margin: 25px 0; border-radius: 8px; }
+    .info-row { display: flex; margin-bottom: 12px; }
+    .info-label { font-weight: bold; min-width: 160px; color: #555; }
+    .info-value { color: #111; }
+    .password-value { font-family: 'Courier New', monospace; font-size: 18px; font-weight: bold;
+                      color: #dc2626; letter-spacing: 2px; background: #fff; padding: 2px 8px;
+                      border-radius: 4px; border: 1px solid #fca5a5; }
+    .warning { color: #d97706; background: #fef3c7; padding: 10px; border-radius: 4px;
+               margin-top: 15px; font-size: 14px; }
+    .footer { color: #666; font-size: 12px; margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Chào Mừng Đến Với EMS</h1>
+    </div>
+    <div class="content">
+      <p>Xin chào <strong>{{fullName}}</strong>,</p>
+      <p>Tài khoản làm việc của bạn trong hệ thống <strong>Quản Lý Nhân Sự (EMS)</strong> đã được tạo thành công.</p>
+
+      <div class="info-box">
+        <div class="info-row">
+          <span class="info-label">Email đăng nhập:</span>
+          <span class="info-value">{{companyEmail}}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Mật khẩu tạm thời:</span>
+          <span class="info-value"><span class="password-value">{{tempPassword}}</span></span>
+        </div>
+        <div class="warning">⚠️ Bạn sẽ được yêu cầu đổi mật khẩu ngay sau lần đăng nhập đầu tiên.</div>
+      </div>
+
+      <p><strong>Lưu ý bảo mật:</strong></p>
+      <ul>
+        <li>Không chia sẻ mật khẩu tạm thời này với bất kỳ ai</li>
+        <li>Đổi mật khẩu ngay sau khi đăng nhập lần đầu</li>
+        <li>Mật khẩu mới phải có ít nhất 8 ký tự, gồm chữ hoa, chữ thường và số</li>
+      </ul>
+
+      <p>Nếu bạn không yêu cầu tạo tài khoản này, vui lòng liên hệ ngay với quản trị viên hệ thống.</p>
+
+      <p>Trân trọng,<br>
+      <strong>Hệ Thống Quản Lý Nhân Sự</strong>
+      </p>
+    </div>
+    <div class="footer">
+      <p>Đây là email tự động. Vui lòng không trả lời email này.</p>
+    </div>
+  </div>
+</body>
+</html>

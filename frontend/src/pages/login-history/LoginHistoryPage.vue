@@ -1,11 +1,9 @@
 <template>
-  <q-page class="lh-page q-pa-md">
-
+  <q-page class="lh-page q-pa-md page-container">
     <!-- Header -->
     <div class="row items-center q-mb-lg">
       <div class="col">
         <div class="row items-center q-gutter-sm">
-          <q-icon name="login" size="28px" color="indigo-6" />
           <div>
             <h1 class="text-h5 q-my-none text-weight-bold">Lịch sử đăng nhập</h1>
             <p class="text-caption text-grey-6 q-my-none">Theo dõi hoạt động đăng nhập / đăng xuất</p>
@@ -23,15 +21,17 @@
     </div>
 
     <!-- Stats bar (admin only) -->
-    <div v-if="isAdmin" class="row q-col-gutter-md q-mb-md">
-      <div class="col-6 col-md-3" v-for="stat in summaryStats" :key="stat.label">
-        <q-card flat bordered class="stat-card text-center q-pa-md">
-          <q-icon :name="stat.icon" :color="stat.color" size="28px" />
-          <div class="text-h5 text-weight-bold q-mt-xs">{{ stat.value }}</div>
-          <div class="text-caption text-grey-6">{{ stat.label }}</div>
-        </q-card>
-      </div>
-    </div>
+     <div class="page-header">
+       <div v-if="isAdmin" class="row q-col-gutter-md q-mb-md page-filter">
+         <div class="col-6 col-md-3" v-for="stat in summaryStats" :key="stat.label">
+           <q-card flat bordered class="stat-card text-center q-pa-md">
+             <q-icon :name="stat.icon" :color="stat.color" size="28px" />
+             <div class="text-h5 text-weight-bold q-mt-xs">{{ stat.value }}</div>
+             <div class="text-caption text-grey-6">{{ stat.label }}</div>
+           </q-card>
+         </div>
+       </div>
+     </div>
 
     <!-- Filters -->
     <q-card flat bordered class="q-mb-md" style="background:#fafafa">
@@ -79,6 +79,8 @@
     <!-- Table -->
     <q-card flat bordered>
       <q-table
+        table-style="max-height: calc(100vh - 320px)"
+        class="login_history-table"
         :rows="records"
         :columns="columns"
         row-key="_id"
@@ -343,5 +345,27 @@ onMounted(() => { void loadHistory() })
   text-overflow: ellipsis;
   white-space: nowrap;
   display: inline-block;
+}
+
+.page-container {
+  max-width: 1400px;
+  margin: 0 auto;
+
+  height: calc(100vh - 80px);
+  display: flex;
+  flex-direction: column;
+}
+.page-header,
+.page-filter {
+  flex-shrink: 0;
+}
+.table-container {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.login_history-table {
+  height: 100%;
 }
 </style>

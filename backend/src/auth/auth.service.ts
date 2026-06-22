@@ -9,7 +9,11 @@ import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import * as bcrypt from 'bcrypt';
-import { Account, AccountDocument } from '../accounts/schema/account.schema';
+import {
+  Account,
+  AccountDocument,
+  AccountStatus,
+} from '../accounts/schema/account.schema';
 import {
   Department,
   DepartmentDocument,
@@ -54,8 +58,16 @@ export class AuthService {
       throw new UnauthorizedException('Email hoặc mật khẩu không đúng');
     }
 
-    if (!account.is_active) {
-      throw new ForbiddenException('Tài khoản đã bị khóa');
+    // Phân biệt rõ 3 trạng thái tài khoản
+    if (account.status === AccountStatus.INACTIVE) {
+      throw new ForbiddenException(
+        'Tài khoản chưa được kích hoạt. Vui lòng liên hệ Admin.',
+      );
+    }
+    if (account.status === AccountStatus.LOCKED) {
+      throw new ForbiddenException(
+        'Tài khoản đã bị khóa. Vui lòng liên hệ Admin.',
+      );
     }
 
     const isPasswordValid = await bcrypt.compare(
@@ -124,9 +136,9 @@ export class AuthService {
       .findById(accountId)
       .lean<LeanAccount>();
 
-    if (!account || !account.is_active) {
+    if (!account || account.status !== AccountStatus.ACTIVE) {
       throw new UnauthorizedException(
-        'Tài khoản không tồn tại hoặc đã bị khóa',
+        'Tài khoản không tồn tại hoặc không còn hoạt động',
       );
     }
 
@@ -152,7 +164,7 @@ export class AuthService {
     };
   }
 
-  // ─── Change password (first login / đổi mật khẩu) ─────────────────────────
+  // ─── Change password ──────────────────────────────────────────────────────
 
   async changePassword(
     accountId: string,
@@ -160,11 +172,11 @@ export class AuthService {
   ): Promise<{ message: string }> {
     const account = await this.accountModel
       .findById(accountId)
-      .select('+password_hash is_first_login');
+      .select('+password_hash');
 
-    if (!account || !account.is_active) {
+    if (!account || account.status !== AccountStatus.ACTIVE) {
       throw new UnauthorizedException(
-        'Tài khoản không tồn tại hoặc đã bị khóa',
+        'Tài khoản không tồn tại hoặc không còn hoạt động',
       );
     }
 
@@ -212,20 +224,6 @@ export class AuthService {
       10,
     );
 
-    console.log('================ JWT DEBUG ================');
-    console.log('JWT_ACCESS_TTL =', accessTtl);
-    console.log('JWT_REFRESH_TTL =', refreshTtl);
-    console.log('TYPE_ACCESS =', typeof accessTtl);
-    console.log('TYPE_REFRESH =', typeof refreshTtl);
-    console.log(
-      'JWT_ACCESS_SECRET =',
-      this.configService.get('JWT_ACCESS_SECRET'),
-    );
-    console.log(
-      'JWT_REFRESH_SECRET =',
-      this.configService.get('JWT_REFRESH_SECRET'),
-    );
-
     const accessToken = await this.jwtService.signAsync(payload, {
       secret: this.configService.getOrThrow<string>('JWT_ACCESS_SECRET'),
       expiresIn: accessTtl,
@@ -235,14 +233,6 @@ export class AuthService {
       secret: this.configService.getOrThrow<string>('JWT_REFRESH_SECRET'),
       expiresIn: refreshTtl,
     });
-
-    console.log('ACCESS TOKEN GENERATED');
-    console.log(accessToken);
-
-    console.log('REFRESH TOKEN GENERATED');
-    console.log(refreshToken);
-
-    console.log('==========================================');
 
     return { accessToken, refreshToken };
   }

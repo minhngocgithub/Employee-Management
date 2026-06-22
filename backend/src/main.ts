@@ -4,7 +4,6 @@ import { ValidationPipe, Logger } from '@nestjs/common';
 import { Connection } from 'mongoose';
 import { getConnectionToken } from '@nestjs/mongoose';
 import { AppModule } from './app.module';
-import { seedInitialData } from './index';
 import { setupSwagger } from './common/config/swagger.config';
 import cookieParser from 'cookie-parser';
 import dns from 'node:dns';
@@ -14,8 +13,6 @@ async function bootstrap(): Promise<void> {
   const logger = new Logger('Bootstrap');
   const app = await NestFactory.create(AppModule);
   app.use(cookieParser());
-
-  await seedInitialData(app);
 
   const configService = app.get(ConfigService);
   const port = configService.get<number>('PORT', 3000);

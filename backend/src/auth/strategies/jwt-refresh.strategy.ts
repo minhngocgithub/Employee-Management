@@ -10,7 +10,11 @@ import {
   JwtPayload,
   AuthenticatedUser,
 } from '../strategies/jwt-payload.interface';
-import { Account, AccountDocument } from '../../accounts/schema/account.schema';
+import {
+  Account,
+  AccountDocument,
+  AccountStatus,
+} from '../../accounts/schema/account.schema';
 
 @Injectable()
 export class JwtRefreshStrategy extends PassportStrategy(
@@ -48,19 +52,19 @@ export class JwtRefreshStrategy extends PassportStrategy(
       throw new UnauthorizedException('Refresh token không tồn tại');
     }
 
-    // refresh_token_hash có select:false → phải dùng .select('+refresh_token_hash')
+    // refresh_token_hash có select:false → phải dùng +refresh_token_hash
     const account = await this.accountModel
       .findById(payload.sub)
-      .select('+refresh_token_hash is_active')
+      .select('+refresh_token_hash status')
       .lean<{
         _id: Types.ObjectId;
-        is_active: boolean;
+        status: AccountStatus;
         refresh_token_hash: string | null;
       }>();
 
-    if (!account || !account.is_active) {
+    if (!account || account.status !== AccountStatus.ACTIVE) {
       throw new UnauthorizedException(
-        'Tài khoản không tồn tại hoặc đã bị khóa',
+        'Tài khoản không tồn tại hoặc chưa được kích hoạt / đã bị khóa',
       );
     }
 
@@ -76,7 +80,6 @@ export class JwtRefreshStrategy extends PassportStrategy(
       throw new UnauthorizedException('Refresh token không hợp lệ');
     }
 
-    // Trả về AuthenticatedUser — gắn vào req.user
     return {
       id: payload.sub,
       email: payload.email,
