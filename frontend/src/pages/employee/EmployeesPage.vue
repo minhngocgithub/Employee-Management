@@ -18,7 +18,7 @@
       <q-card class="q-mb-lg page-filter">
         <q-card-section>
           <div class="row q-col-gutter-md">
-            <div class="col-12 col-md-6">
+            <div class="col-12 col-lg-4">
               <q-input v-model="searchText" outlined dense :placeholder="$t('employees.search')" clearable>
                 <template #prepend>
                   <q-icon name="search" />
@@ -26,24 +26,58 @@
               </q-input>
             </div>
 
-            <div class="col-12 col-md-3">
+            <div class="col-12 col-sm-6 col-lg-2">
               <q-select 
-                v-model="filterStatus" 
+                v-model="filterEmploymentStatus" 
                 outlined 
                 dense 
                 options-dense 
-                :options="EMPLOYEE_STATUS_OPTIONS"
+                :options="employmentStatusOptions"
                 option-label="label" 
                 option-value="value" 
                 emit-value 
                 map-options 
-                :label="$t('common.status')" 
+                :label="$t('common.employment')" 
                 clearable
                 @update:model-value="onFilterChange" 
               />
             </div>
 
-            <div class="col-12 col-md-3">
+            <div class="col-12 col-sm-6 col-lg-2">
+              <q-select 
+                v-model="filterAccountStatus" 
+                outlined 
+                dense 
+                options-dense 
+                :options="accountStatusOptions"
+                option-label="label" 
+                option-value="value" 
+                emit-value 
+                map-options 
+                :label="$t('common.accountStatus')" 
+                clearable
+                @update:model-value="onFilterChange" 
+              />
+            </div>
+
+            <div class="col-12 col-sm-6 col-lg-2">
+              <q-select 
+                v-model="filterPosition" 
+                outlined 
+                dense 
+                options-dense 
+                :options="positionOptions"
+                option-label="label" 
+                option-value="value" 
+                emit-value 
+                map-options 
+                :label="$t('common.position')" 
+                clearable
+                @update:model-value="onFilterChange" 
+              />
+            </div>
+
+            <div class="col-12 col-sm-6 col-lg-2">
               <q-btn outline color="primary" :label="$t('common.reload')" icon="refresh" @click="loadEmployees" :loading="loading"
                 class="full-width" />
             </div>
@@ -62,7 +96,16 @@
           </q-td>
         </template>
 
-        <template #body-cell-status="props">
+        <template #body-cell-accountStatus="props">
+          <q-td :props="props">
+            <q-badge
+              :color="accountStatusColor(props.row)"
+              :label="accountStatusLabel(props.row)"
+            />
+          </q-td>
+        </template>
+
+        <template #body-cell-employmentStatus="props">
           <q-td :props="props">
             <q-badge
               :color="statusColor(props.row.status)"
@@ -147,8 +190,26 @@ import {
   getEmployeeStatusColor,
 } from 'src/composables/useEmployeeLabels';
 
-import type { Employee, EmployeeStatus, Department } from 'src/types/api.types';
+import type { Employee, EmployeeStatus, Department, AccountStatus } from 'src/types/api.types';
 import { useDebounceFn } from '@vueuse/core';
+
+// Position options list
+const POSITIONS = [
+  'System Administrator',
+  'Technology Director',
+  'Software Manager',
+  'HR Manager',
+  'Senior Developer',
+  'Frontend Developer',
+  'Backend Developer',
+  'Network Engineer',
+  'Infrastructure Manager',
+  'Business Director',
+  'Sales Representative',
+  'Senior Sales Rep',
+  'Marketing Specialist',
+  'HR Specialist',
+];
 
 const $q = useQuasar();
 const authStore = useAuthStore();
@@ -165,7 +226,29 @@ const searchText = ref('');
 // FIX: 'canCreateDepartment' đổi tên cho đúng nghĩa
 const canCreateEmployee = computed(() => authStore.role !== 'manager');
 
-const filterStatus = ref<EmployeeStatus | 'all' | undefined>(undefined);
+const filterEmploymentStatus = ref<EmployeeStatus | 'all' | undefined>(undefined);
+const filterAccountStatus = ref<'active' | 'inactive' | 'locked' | 'all' | undefined>(undefined);
+const filterPosition = ref<string | 'all' | undefined>(undefined);
+
+// Filter options computed
+const employmentStatusOptions = computed(() => [
+  { label: 'Tất cả', value: 'all' },
+  { label: 'Đang làm việc', value: 'working' },
+  { label: 'Nghỉ hưu', value: 'retired' },
+  { label: 'Nghỉ việc', value: 'resigned' },
+]);
+
+const accountStatusOptions = computed(() => [
+  { label: 'Tất cả', value: 'all' },
+  { label: 'Hoạt động', value: 'active' },
+  { label: 'Bị khóa', value: 'inactive' },
+  { label: 'Bị khóa', value: 'locked' },
+]);
+
+const positionOptions = computed(() => [
+  { label: 'Tất cả vị trí', value: 'all' },
+  ...POSITIONS.map(p => ({ label: p, value: p })),
+]);
 
 const pagination = ref({
   sortBy: null,
@@ -196,8 +279,15 @@ const columns = [
     align: 'left' as const,
   },
   {
-    name: 'status',
-    label: 'Trạng thái',
+    name: 'accountStatus',
+    label: 'Trạng thái Tài khoản',
+    field: (row: Employee) =>
+      typeof row.account_id === 'object' ? row.account_id.status : '—',
+    align: 'center' as const,
+  },
+  {
+    name: 'employmentStatus',
+    label: 'Trạng thái Công việc',
     field: 'status',
     align: 'center' as const,
   },
@@ -217,7 +307,36 @@ function statusColor(status: EmployeeStatus): string {
 
 function statusLabel(status: EmployeeStatus): string {
   return getEmployeeStatusLabel(status);
-  }
+}
+
+function accountStatusColor(employee: Employee): string {
+  const accountStatus = typeof employee.account_id === 'object' 
+    ? employee.account_id.status 
+    : 'unknown';
+  
+  const colorMap: Record<string, string> = {
+    'active': 'green',
+    'inactive': 'grey',
+    'locked': 'red',
+    'unknown': 'grey',
+  };
+  
+  return colorMap[accountStatus] || 'grey';
+}
+
+function accountStatusLabel(employee: Employee): string {
+  const accountStatus = typeof employee.account_id === 'object' 
+    ? employee.account_id.status 
+    : 'Unknown';
+  
+  const labelMap: Record<string, string> = {
+    'active': 'Hoạt động',
+    'inactive': 'Vô hiệu',
+    'locked': 'Bị khóa',
+    'unknown': 'Không biết',
+  };
+  
+  return labelMap[accountStatus] || 'Không biết';
 }
 
 /**
@@ -258,15 +377,30 @@ async function loadEmployees(): Promise<void> {
       page: pagination.value.page,
       limit: pagination.value.rowsPerPage,
 
-      ...(filterStatus.value && filterStatus.value !== 'all'
-        ? { status: filterStatus.value }
+      ...(filterEmploymentStatus.value && filterEmploymentStatus.value !== 'all'
+        ? { status: filterEmploymentStatus.value }
+        : {}),
+
+      ...(filterPosition.value && filterPosition.value !== 'all'
+        ? { position: filterPosition.value }
         : {}),
 
       ...(searchText.value ? { search: searchText.value } : {}),
     });
 
-    employees.value = result.data;
-    pagination.value.rowsNumber = result.total;
+    // Client-side filter for account status if API doesn't support it
+    let filtered = result.data;
+    if (filterAccountStatus.value && filterAccountStatus.value !== 'all') {
+      filtered = filtered.filter(emp => {
+        const accountStatus = typeof emp.account_id === 'object' 
+          ? emp.account_id.status 
+          : null;
+        return accountStatus === filterAccountStatus.value;
+      });
+    }
+
+    employees.value = filtered;
+    pagination.value.rowsNumber = filtered.length;
   } finally {
     loading.value = false;
   }
