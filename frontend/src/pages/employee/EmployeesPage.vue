@@ -62,24 +62,27 @@
 
             <div class="col-12 col-sm-6 col-lg-2">
               <q-select 
-                v-model="filterPosition" 
+                v-model="filterDepartment" 
                 outlined 
                 dense 
                 options-dense 
-                :options="positionOptions"
+                :options="departmentOptions"
                 option-label="label" 
                 option-value="value" 
                 emit-value 
                 map-options 
-                :label="$t('common.position')" 
+                :label="$t('common.department')" 
                 clearable
                 @update:model-value="onFilterChange" 
+                :loading="departmentsLoading"
               />
             </div>
 
-            <div class="col-12 col-sm-6 col-lg-2">
-              <q-btn outline color="primary" :label="$t('common.reload')" icon="refresh" @click="loadEmployees" :loading="loading"
-                class="full-width" />
+            <div class="col-12 col-sm-6 col-lg-1">
+              <q-btn outline color="primary" icon="refresh" @click="loadEmployees" :loading="loading"
+                class="full-width"
+                :title="$t('common.reload')" 
+              />
             </div>
           </div>
         </q-card-section>
@@ -111,6 +114,12 @@
               :color="statusColor(props.row.status)"
               :label="statusLabel(props.row.status)"
             />
+          </q-td>
+        </template>
+
+        <template #body-cell-department="props">
+          <q-td :props="props">
+            {{ getDepartmentName(props.row.department_id) || '—' }}
           </q-td>
         </template>
 
@@ -218,6 +227,10 @@ const { success, error } = useAlert();
 const employees = ref<Employee[]>([]);
 const loading = ref(false);
 
+// Departments data
+const departments = ref<Department[]>([]);
+const departmentsLoading = ref(false);
+
 // Department hiện tại — dùng để check acting_manager_id
 const currentDepartment = ref<Department | null>(null);
 
@@ -229,6 +242,7 @@ const canCreateEmployee = computed(() => authStore.role !== 'manager');
 const filterEmploymentStatus = ref<EmployeeStatus | 'all' | undefined>(undefined);
 const filterAccountStatus = ref<'active' | 'inactive' | 'locked' | 'all' | undefined>(undefined);
 const filterPosition = ref<string | 'all' | undefined>(undefined);
+const filterDepartment = ref<string | undefined>(undefined);
 
 // Filter options computed
 const employmentStatusOptions = computed(() => [
@@ -248,6 +262,11 @@ const accountStatusOptions = computed(() => [
 const positionOptions = computed(() => [
   { label: 'Tất cả vị trí', value: 'all' },
   ...POSITIONS.map(p => ({ label: p, value: p })),
+]);
+
+const departmentOptions = computed(() => [
+  { label: 'Tất cả phòng ban', value: '' },
+  ...departments.value.map(d => ({ label: d.name, value: d._id })),
 ]);
 
 const pagination = ref({
@@ -276,6 +295,12 @@ const columns = [
     name: 'position',
     label: 'Chức vụ',
     field: 'position',
+    align: 'left' as const,
+  },
+  {
+    name: 'department',
+    label: 'Phòng ban',
+    field: 'department_id',
     align: 'left' as const,
   },
   {
@@ -339,6 +364,12 @@ function accountStatusLabel(employee: Employee): string {
   return labelMap[accountStatus] || 'Không biết';
 }
 
+function getDepartmentName(departmentId: string | undefined): string | null {
+  if (!departmentId) return null;
+  const dept = departments.value.find(d => d._id === departmentId);
+  return dept?.name || null;
+}
+
 /**
  * FIX: implement đúng — so sánh employee._id với acting_manager_id của phòng ban.
  * Cần department data để biết ai đang là acting manager.
@@ -385,6 +416,10 @@ async function loadEmployees(): Promise<void> {
         ? { position: filterPosition.value }
         : {}),
 
+      ...(filterDepartment.value
+        ? { department_id: filterDepartment.value }
+        : {}),
+
       ...(searchText.value ? { search: searchText.value } : {}),
     });
 
@@ -403,6 +438,19 @@ async function loadEmployees(): Promise<void> {
     pagination.value.rowsNumber = filtered.length;
   } finally {
     loading.value = false;
+  }
+}
+
+/** Load all departments for filter dropdown */
+async function loadDepartments(): Promise<void> {
+  departmentsLoading.value = true;
+  try {
+    departments.value = await departmentApi.list();
+  } catch {
+    // non-critical — chỉ ảnh hưởng tới dropdown filter
+    departments.value = [];
+  } finally {
+    departmentsLoading.value = false;
   }
 }
 
@@ -550,6 +598,7 @@ async function doRevokeActingManager(): Promise<void> {
 }
 
 onMounted(() => {
+  void loadDepartments();
   void loadEmployees();
   void loadCurrentDepartment();
 });
