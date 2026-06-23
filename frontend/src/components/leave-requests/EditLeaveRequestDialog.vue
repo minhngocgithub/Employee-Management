@@ -106,10 +106,10 @@ function toDateInput(value: string): string {
 }
 
 const form = ref<UpdateLeaveRequestDto>({
-  leave_type: props.leaveRequest.leave_type as LeaveType,
+  leave_type: props.leaveRequest.leave_type,
   start_date: toDateInput(props.leaveRequest.start_date),
   end_date: toDateInput(props.leaveRequest.end_date),
-  reason: props.leaveRequest.reason as string,
+  reason: props.leaveRequest.reason,
 });
 
 const leaveDays = computed(() =>
@@ -117,9 +117,9 @@ const leaveDays = computed(() =>
 );
 
 async function submit(): Promise<void> {
-  const startDate = form.value.start_date as string;
-  const endDate = form.value.end_date as string;
-  const reason = form.value.reason as string;
+  const startDate = form.value.start_date ?? '';
+  const endDate = form.value.end_date ?? '';
+  const reason = form.value.reason ?? '';
 
   if (
     !form.value.leave_type ||

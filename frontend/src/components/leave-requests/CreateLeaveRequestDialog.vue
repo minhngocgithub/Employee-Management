@@ -98,20 +98,20 @@ const loading = ref(false);
 const minDate = todayDateString();
 
 const form = ref<CreateLeaveRequestDto>({
-  leave_type: 'annual' as LeaveType,
+  leave_type: 'annual',
   start_date: minDate,
   end_date: minDate,
   reason: '',
 });
 
 const leaveDays = computed(() =>
-  countLeaveDays(form.value.start_date, form.value.end_date),
+  countLeaveDays(form.value.start_date ?? '', form.value.end_date ?? ''),
 );
 
 async function submit(): Promise<void> {
-  const startDate = form.value.start_date as string;
-  const endDate = form.value.end_date as string;
-  const reason = form.value.reason as string;
+  const startDate = form.value.start_date ?? '';
+  const endDate = form.value.end_date ?? '';
+  const reason = form.value.reason ?? '';
 
   if (!form.value.leave_type || !startDate || !endDate) {
     $q.notify({ type: 'warning', message: 'Vui lòng nhập đầy đủ thông tin' });

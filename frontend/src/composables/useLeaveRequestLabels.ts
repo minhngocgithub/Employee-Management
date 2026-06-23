@@ -8,26 +8,26 @@ export function useLeaveRequestI18n() {
   const { t } = useI18n();
 
   const LEAVE_TYPE_OPTIONS = computed(() => [
-    { label: t('leaveType.annual'), value: 'annual' as LeaveType },
-    { label: t('leaveType.sick'), value: 'sick' as LeaveType },
-    { label: t('leaveType.unpaid'), value: 'unpaid' as LeaveType },
-    { label: t('leaveType.maternity'), value: 'maternity' as LeaveType },
-    { label: t('leaveType.other_leave'), value: 'other_leave' as LeaveType },
-    { label: t('leaveType.wfh'), value: 'wfh' as LeaveType },
-    { label: t('leaveType.shift_change'), value: 'shift_change' as LeaveType },
-    { label: t('leaveType.late_early'), value: 'late_early' as LeaveType },
-    { label: t('leaveType.overtime'), value: 'overtime' as LeaveType },
-    { label: t('leaveType.attendance_correction'), value: 'attendance_correction' as LeaveType },
-    { label: t('leaveType.business_trip'), value: 'business_trip' as LeaveType },
-    { label: t('leaveType.salary_advance'), value: 'salary_advance' as LeaveType },
-    { label: t('leaveType.resignation'), value: 'resignation' as LeaveType },
+    { label: t('leaveType.annual'), value: 'annual' },
+    { label: t('leaveType.sick'), value: 'sick' },
+    { label: t('leaveType.unpaid'), value: 'unpaid' },
+    { label: t('leaveType.maternity'), value: 'maternity' },
+    { label: t('leaveType.other_leave'), value: 'other_leave' },
+    { label: t('leaveType.wfh'), value: 'wfh' },
+    { label: t('leaveType.shift_change'), value: 'shift_change' },
+    { label: t('leaveType.late_early'), value: 'late_early' },
+    { label: t('leaveType.overtime'), value: 'overtime' },
+    { label: t('leaveType.attendance_correction'), value: 'attendance_correction' },
+    { label: t('leaveType.business_trip'), value: 'business_trip' },
+    { label: t('leaveType.salary_advance'), value: 'salary_advance' },
+    { label: t('leaveType.resignation'), value: 'resignation' },
   ]);
 
   const LEAVE_STATUS_OPTIONS = computed(() => [
-    { label: t('leaveStatus.pending'), value: 'pending' as LeaveStatus },
-    { label: t('leaveStatus.approved'), value: 'approved' as LeaveStatus },
-    { label: t('leaveStatus.rejected'), value: 'rejected' as LeaveStatus },
-    { label: t('leaveStatus.cancelled'), value: 'cancelled' as LeaveStatus },
+    { label: t('leaveStatus.pending'), value: 'pending' },
+    { label: t('leaveStatus.approved'), value: 'approved' },
+    { label: t('leaveStatus.rejected'), value: 'rejected' },
+    { label: t('leaveStatus.cancelled'), value: 'cancelled' },
   ]);
 
   return {

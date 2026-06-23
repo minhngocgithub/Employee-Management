@@ -2,13 +2,13 @@ import type { EmployeeStatus } from 'src/types/api.types';
 
 // ─── Options cho dropdown/filter ─────────────────────────────────────────────
 
-export const EMPLOYEE_STATUS_OPTIONS: { label: string; value: EmployeeStatus | 'all' }[] = [
-  { label: 'Đang làm việc', value: 'working' },
-  { label: 'Nghỉ hưu', value: 'retired' },
-  { label: 'Nghỉ việc', value: 'resigned' },
-  { label: 'Chưa kích hoạt', value: null },
-  { label: 'Tất cả', value: 'all' },
-];
+export const EMPLOYEE_STATUS_OPTIONS = [
+  { label: 'Đang làm việc', value: 'working' as EmployeeStatus },
+  { label: 'Nghỉ hưu', value: 'retired' as EmployeeStatus },
+  { label: 'Nghỉ việc', value: 'resigned' as EmployeeStatus },
+  { label: 'Chưa kích hoạt', value: null as EmployeeStatus },
+  { label: 'Tất cả', value: 'all' as const },
+] as const;
 
 // ─── Label maps ───────────────────────────────────────────────────────────────
 
