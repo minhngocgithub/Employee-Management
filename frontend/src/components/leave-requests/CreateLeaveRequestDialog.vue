@@ -82,7 +82,7 @@ import {
   countLeaveDays,
   todayDateString,
 } from 'src/composables/useLeaveRequestLabels';
-import type { CreateLeaveRequestDto } from 'src/types/api.types';
+import type { CreateLeaveRequestDto, LeaveType } from 'src/types/api.types';
 
 defineEmits([...useDialogPluginComponent.emits]);
 
@@ -98,7 +98,7 @@ const loading = ref(false);
 const minDate = todayDateString();
 
 const form = ref<CreateLeaveRequestDto>({
-  leave_type: 'annual',
+  leave_type: 'annual' as LeaveType,
   start_date: minDate,
   end_date: minDate,
   reason: '',
@@ -109,12 +109,16 @@ const leaveDays = computed(() =>
 );
 
 async function submit(): Promise<void> {
-  if (!form.value.leave_type || !form.value.start_date || !form.value.end_date) {
+  const startDate = form.value.start_date as string;
+  const endDate = form.value.end_date as string;
+  const reason = form.value.reason as string;
+
+  if (!form.value.leave_type || !startDate || !endDate) {
     $q.notify({ type: 'warning', message: 'Vui lòng nhập đầy đủ thông tin' });
     return;
   }
 
-  if (form.value.start_date < minDate) {
+  if (startDate < minDate) {
     $q.notify({
       type: 'warning',
       message: 'Ngày bắt đầu không được trước hôm nay',
@@ -122,7 +126,7 @@ async function submit(): Promise<void> {
     return;
   }
 
-  if (form.value.end_date < form.value.start_date) {
+  if (endDate < startDate) {
     $q.notify({
       type: 'warning',
       message: 'Ngày kết thúc phải sau hoặc bằng ngày bắt đầu',
@@ -130,7 +134,7 @@ async function submit(): Promise<void> {
     return;
   }
 
-  if (!form.value.reason.trim()) {
+  if (!reason.trim()) {
     $q.notify({ type: 'warning', message: 'Vui lòng nhập lý do nghỉ phép' });
     return;
   }
@@ -139,7 +143,7 @@ async function submit(): Promise<void> {
   try {
     const result = await leaveRequestApi.create({
       ...form.value,
-      reason: form.value.reason.trim(),
+      reason: reason.trim(),
     });
     onDialogOK(result);
   } catch (err: unknown) {

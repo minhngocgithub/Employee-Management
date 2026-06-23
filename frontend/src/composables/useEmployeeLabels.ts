@@ -12,18 +12,16 @@ export const EMPLOYEE_STATUS_OPTIONS: { label: string; value: EmployeeStatus | '
 
 // ─── Label maps ───────────────────────────────────────────────────────────────
 
-const EMPLOYEE_STATUS_LABELS: Record<EmployeeStatus, string> = {
+const EMPLOYEE_STATUS_LABELS: Record<Exclude<EmployeeStatus, null>, string> = {
   working: 'Đang làm việc',
   retired: 'Nghỉ hưu',
   resigned: 'Nghỉ việc',
-  null: 'Chưa kích hoạt',
 } as const;
 
-const EMPLOYEE_STATUS_COLORS: Record<EmployeeStatus, string> = {
+const EMPLOYEE_STATUS_COLORS: Record<Exclude<EmployeeStatus, null>, string> = {
   working: 'green',
   retired: 'blue',
   resigned: 'orange',
-  null: 'grey',
 } as const;
 
 // ─── Helper functions ─────────────────────────────────────────────────────────

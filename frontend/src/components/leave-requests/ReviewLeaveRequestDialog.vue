@@ -95,10 +95,12 @@ const {
 
 const $q = useQuasar();
 const loading = ref(false);
-const rejectionReason = ref('');
+const rejectionReason = ref<string>('');
 
 async function submit(status: 'approved' | 'rejected'): Promise<void> {
-  if (status === 'rejected' && !rejectionReason.value.trim()) {
+  const reason = rejectionReason.value as string;
+
+  if (status === 'rejected' && !reason.trim()) {
     $q.notify({ type: 'warning', message: 'Vui lòng nhập lý do từ chối' });
     return;
   }
@@ -108,7 +110,7 @@ async function submit(status: 'approved' | 'rejected'): Promise<void> {
     const result = await leaveRequestApi.review(props.leaveRequest._id, {
       status,
       ...(status === 'rejected'
-        ? { rejection_reason: rejectionReason.value.trim() }
+        ? { rejection_reason: reason.trim() }
         : {}),
     });
     onDialogOK(result);

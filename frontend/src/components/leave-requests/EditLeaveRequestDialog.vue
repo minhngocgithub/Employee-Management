@@ -82,7 +82,7 @@ import {
   countLeaveDays,
   todayDateString,
 } from 'src/composables/useLeaveRequestLabels';
-import type { LeaveRequest, UpdateLeaveRequestDto } from 'src/types/api.types';
+import type { LeaveRequest, UpdateLeaveRequestDto, LeaveType } from 'src/types/api.types';
 
 const props = defineProps<{
   leaveRequest: LeaveRequest;
@@ -106,10 +106,10 @@ function toDateInput(value: string): string {
 }
 
 const form = ref<UpdateLeaveRequestDto>({
-  leave_type: props.leaveRequest.leave_type,
+  leave_type: props.leaveRequest.leave_type as LeaveType,
   start_date: toDateInput(props.leaveRequest.start_date),
   end_date: toDateInput(props.leaveRequest.end_date),
-  reason: props.leaveRequest.reason,
+  reason: props.leaveRequest.reason as string,
 });
 
 const leaveDays = computed(() =>
@@ -117,17 +117,21 @@ const leaveDays = computed(() =>
 );
 
 async function submit(): Promise<void> {
+  const startDate = form.value.start_date as string;
+  const endDate = form.value.end_date as string;
+  const reason = form.value.reason as string;
+
   if (
     !form.value.leave_type ||
-    !form.value.start_date ||
-    !form.value.end_date ||
-    !form.value.reason?.trim()
+    !startDate ||
+    !endDate ||
+    !reason.trim()
   ) {
     $q.notify({ type: 'warning', message: 'Vui lòng nhập đầy đủ thông tin' });
     return;
   }
 
-  if (form.value.start_date < minDate) {
+  if (startDate < minDate) {
     $q.notify({
       type: 'warning',
       message: 'Ngày bắt đầu không được trước hôm nay',
@@ -135,7 +139,7 @@ async function submit(): Promise<void> {
     return;
   }
 
-  if (form.value.end_date < form.value.start_date) {
+  if (endDate < startDate) {
     $q.notify({
       type: 'warning',
       message: 'Ngày kết thúc phải sau hoặc bằng ngày bắt đầu',
@@ -147,7 +151,7 @@ async function submit(): Promise<void> {
   try {
     const result = await leaveRequestApi.update(props.leaveRequest._id, {
       ...form.value,
-      reason: form.value.reason.trim(),
+      reason: reason.trim(),
     });
     onDialogOK(result);
   } catch (err: unknown) {

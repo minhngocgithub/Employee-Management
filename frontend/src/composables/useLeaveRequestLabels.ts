@@ -38,7 +38,7 @@ export function useLeaveRequestI18n() {
 
 // ─── Fallback Options (English) para sa backward compatibility ─────────────────
 
-export const LEAVE_TYPE_OPTIONS: { label: string; value: LeaveType }[] = [
+export const LEAVE_TYPE_OPTIONS = [
   { label: 'Annual Leave', value: 'annual' },
   { label: 'Sick Leave', value: 'sick' },
   { label: 'Unpaid Leave', value: 'unpaid' },
@@ -52,14 +52,14 @@ export const LEAVE_TYPE_OPTIONS: { label: string; value: LeaveType }[] = [
   { label: 'Business Trip', value: 'business_trip' },
   { label: 'Salary Advance', value: 'salary_advance' },
   { label: 'Resignation', value: 'resignation' },
-];
+] as const;
 
-export const LEAVE_STATUS_OPTIONS: { label: string; value: LeaveStatus }[] = [
+export const LEAVE_STATUS_OPTIONS = [
   { label: 'Pending', value: 'pending' },
   { label: 'Approved', value: 'approved' },
   { label: 'Rejected', value: 'rejected' },
   { label: 'Cancelled', value: 'cancelled' },
-];
+] as const;
 
 // ─── Label maps (English fallback) ───────────────────────────────────────────
 
