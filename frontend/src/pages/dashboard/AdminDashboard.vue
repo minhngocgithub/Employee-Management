@@ -272,6 +272,8 @@ ChartJS.register(
 const { error } = useAlert();
 const loading = ref(false);
 const stats = ref<AdminDashboardStats | null>(null);
+const leaveData = ref<any>(null);
+const activitiesData = ref<any>(null);
 
 // Chart options
 const chartOptions = {
@@ -366,26 +368,41 @@ const statusChartData = computed(() => {
   };
 });
 
-// Request Types Chart Data (top 6 types)
+// Request Types Chart Data
 const requestTypesChartData = computed(() => {
+  const requests = leaveData.value?.data || [];
   const typeMap: Record<string, number> = {};
 
-  // Group requests by type (this would come from API in real scenario)
-  const types = [
-    'Annual Leave',
-    'Sick Leave',
-    'Unpaid Leave',
-    'Maternity Leave',
-    'Work From Home',
-    'Other',
-  ];
+  // Group requests by leave type
+  requests.forEach((req: any) => {
+    const type = req.leave_type || 'other';
+    typeMap[type] = (typeMap[type] || 0) + 1;
+  });
+
+  const types = Object.keys(typeMap);
+  const counts = Object.values(typeMap);
+
+  // If no data, show placeholder
+  if (types.length === 0) {
+    return {
+      labels: ['No Data'],
+      datasets: [
+        {
+          label: 'Requests',
+          data: [0],
+          backgroundColor: '#818cf8',
+          borderRadius: 4,
+        },
+      ],
+    };
+  }
 
   return {
     labels: types,
     datasets: [
       {
         label: 'Requests',
-        data: types.map(() => Math.floor(Math.random() * 20) + 5), // Placeholder
+        data: counts,
         backgroundColor: '#818cf8',
         borderRadius: 4,
       },
@@ -411,24 +428,17 @@ const monthlyStatsChartData = computed(() => ({
   ],
 }));
 
-// Recent activities - placeholder data
-const recentActivities = computed(() => [
-  {
-    action: 'CREATE',
-    details: 'New employee created: John Doe',
-    timestamp: new Date().toISOString(),
-  },
-  {
-    action: 'APPROVE',
-    details: 'Leave request approved for Jane Smith',
-    timestamp: new Date(Date.now() - 3600000).toISOString(),
-  },
-  {
-    action: 'UPDATE',
-    details: 'Department information updated: Engineering',
-    timestamp: new Date(Date.now() - 7200000).toISOString(),
-  },
-]);
+// Recent activities from audit logs
+const recentActivities = computed(() => {
+  const activities = activitiesData.value?.data || [];
+  
+  // Map audit logs to activity items, limit to 10
+  return activities.slice(0, 10).map((activity: any) => ({
+    action: activity.action || 'UPDATE',
+    details: activity.details || `${activity.entity} - ${activity.action}`,
+    timestamp: activity.timestamp || new Date().toISOString(),
+  }));
+});
 
 function isAdminStats(
   data: AdminDashboardStats | ManagerDashboardStats,
@@ -458,12 +468,29 @@ function formatDate(timestamp: string): string {
 async function loadDashboardData(): Promise<void> {
   loading.value = true;
   try {
+    // Load main stats
     const data = await dashboardApi.getStats();
     if (!isAdminStats(data)) {
       error('You do not have permission to view the admin dashboard');
       return;
     }
     stats.value = data;
+
+    // Load leave requests data (for Request Types chart)
+    try {
+      const leaves = await dashboardApi.getLeaveRequests();
+      leaveData.value = leaves;
+    } catch (err) {
+      console.warn('Failed to load leave requests:', err);
+    }
+
+    // Load recent activities (audit logs)
+    try {
+      const activities = await dashboardApi.getRecentActivities(10);
+      activitiesData.value = activities;
+    } catch (err) {
+      console.warn('Failed to load recent activities:', err);
+    }
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error';
     error(`Failed to load dashboard data: ${message}`);

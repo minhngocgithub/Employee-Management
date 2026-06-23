@@ -23,14 +23,47 @@
           <span class="text-capitalize">{{ authStore.user.role }}</span>
         </q-chip>
 
-        <q-btn 
+        <q-btn-dropdown 
           flat 
           dense 
-          :label="currentLocale === 'en' ? 'EN' : 'VI'"
-          @click="toggleLanguage"
+          :label="currentLocale === 'en' ? 'English' : 'Tiếng Việt'"
+          icon="language"
+          :icon-color="$q.dark.isActive ? 'white' : 'white'"
           class="q-mr-md"
-          :style="{ minWidth: '40px' }"
-        />
+        >
+          <q-list style="min-width: 150px">
+            <q-item
+              clickable
+              v-ripple
+              @click="changeLanguage('en')"
+              :active="currentLocale === 'en'"
+              active-class="bg-blue-1"
+            >
+              <q-item-section avatar>
+                <q-icon name="done" v-if="currentLocale === 'en'" color="blue" />
+                <q-icon v-else name="blank" />
+              </q-item-section>
+              <q-item-section>
+                <q-item-label>English</q-item-label>
+              </q-item-section>
+            </q-item>
+            <q-item
+              clickable
+              v-ripple
+              @click="changeLanguage('vi')"
+              :active="currentLocale === 'vi'"
+              active-class="bg-blue-1"
+            >
+              <q-item-section avatar>
+                <q-icon name="done" v-if="currentLocale === 'vi'" color="blue" />
+                <q-icon v-else name="blank" />
+              </q-item-section>
+              <q-item-section>
+                <q-item-label>Tiếng Việt</q-item-label>
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </q-btn-dropdown>
 
         <q-btn flat dense icon="logout" :label="$t('common.logout')" @click="onLogout" />
       </q-toolbar>
@@ -101,10 +134,10 @@ const { locale } = useI18n();
 const leftDrawerOpen = ref(false);
 const currentLocale = ref(getLocale());
 
-function toggleLanguage(): void {
-  const newLocale = currentLocale.value === 'en' ? 'vi' : 'en';
+function changeLanguage(newLocale: string): void {
   setLocale(newLocale);
   currentLocale.value = newLocale;
+  locale.value = newLocale;
 }
 
 const primaryMenuItems = computed(() => {
