@@ -3,6 +3,7 @@ import type {
   PaginatedResult,
   Account,
   QueryAccountDto,
+  AccountStatus,
   Role,
 } from 'src/types/api.types';
 

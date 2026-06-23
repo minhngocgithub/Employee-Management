@@ -5,7 +5,7 @@
       <div class="col">
         <h1 class="text-h4 q-my-none">Admin Dashboard</h1>
         <p class="text-subtitle2 text-grey-7 q-mt-xs">
-          Quản lý toàn hệ thống Employee Management System
+          Overview of your organization's workforce and activities.
         </p>
       </div>
       <div class="col-auto">
@@ -13,350 +13,422 @@
           flat
           dense
           icon="refresh"
-          label="Tải lại"
+          label="Reload"
           @click="loadDashboardData"
           :loading="loading"
         />
       </div>
     </div>
 
-    <!-- Statistics Cards -->
+    <!-- 6 Stats Cards Grid -->
     <div class="row q-col-gutter-md q-mb-lg">
       <!-- Total Employees -->
-      <div class="col-12 col-sm-6 col-md-3 animate-slide-in-up">
-        <q-card class="hover-lift h-full">
-          <q-card-section class="bg-blue-1">
-            <div class="text-subtitle2 text-blue-9">Tổng nhân viên</div>
-          </q-card-section>
-          <q-card-section>
-            <div class="text-h4 text-blue-9 q-my-md">
+      <div class="col-12 col-sm-6 col-md-4 col-lg-2">
+        <q-card class="stat-card bg-blue-50 border-l-4" style="border-left-color: #2563eb">
+          <q-card-section class="q-pa-md">
+            <div class="row items-center q-mb-md">
+              <div class="col">
+                <div class="text-caption text-weight-medium text-grey-7">Total Employees</div>
+              </div>
+              <div class="col-auto">
+                <q-icon name="people" size="20px" color="blue-9" />
+              </div>
+            </div>
+            <div class="text-h5 text-weight-bold text-blue-9 q-mb-xs">
               {{ stats?.total_employees || 0 }}
             </div>
-            <!-- FIX: active_employees → working_employees -->
-            <q-linear-progress
-              :value="(stats?.working_employees || 0) / (stats?.total_employees || 1)"
-              color="green"
-              class="q-mt-md"
-            />
-            <div class="text-caption text-grey-7 q-mt-sm">
-              {{ stats?.working_employees || 0 }} đang làm việc
+            <div class="text-caption text-grey-7">
+              {{ stats?.working_employees || 0 }} working
             </div>
           </q-card-section>
         </q-card>
       </div>
 
-      <!-- Working Employees (FIX: active → working) -->
-      <div class="col-12 col-sm-6 col-md-3 animate-slide-in-up">
-        <q-card class="hover-lift h-full">
-          <q-card-section class="bg-green-1">
-            <div class="text-subtitle2 text-green-9">Nhân viên đang làm việc</div>
-          </q-card-section>
-          <q-card-section>
-            <div class="text-h4 text-green-9 q-my-md">
-              {{ stats?.working_employees || 0 }}
+      <!-- Departments -->
+      <div class="col-12 col-sm-6 col-md-4 col-lg-2">
+        <q-card class="stat-card bg-purple-50 border-l-4" style="border-left-color: #a855f7">
+          <q-card-section class="q-pa-md">
+            <div class="row items-center q-mb-md">
+              <div class="col">
+                <div class="text-caption text-weight-medium text-grey-7">Departments</div>
+              </div>
+              <div class="col-auto">
+                <q-icon name="domain" size="20px" color="purple-9" />
+              </div>
             </div>
-            <div class="text-caption text-grey-7 q-mt-md">
-              {{ (((stats?.working_employees || 0) / (stats?.total_employees || 1)) * 100).toFixed(1) }}%
-              tổng số
-            </div>
-          </q-card-section>
-        </q-card>
-      </div>
-
-      <!-- Resigned Employees -->
-      <div class="col-12 col-sm-6 col-md-3 animate-slide-in-up">
-        <q-card class="hover-lift h-full">
-          <q-card-section class="bg-orange-1">
-            <div class="text-subtitle2 text-orange-9">Nhân viên đã nghỉ</div>
-          </q-card-section>
-          <q-card-section>
-            <div class="text-h4 text-orange-9 q-my-md">
-              {{ stats?.resigned_employees || 0 }}
-            </div>
-            <div class="text-caption text-grey-7 q-mt-md">
-              {{ (((stats?.resigned_employees || 0) / (stats?.total_employees || 1)) * 100).toFixed(1) }}%
-              tổng số
-            </div>
-          </q-card-section>
-        </q-card>
-      </div>
-
-      <!-- Total Departments -->
-      <div class="col-12 col-sm-6 col-md-3 animate-slide-in-up">
-        <q-card class="hover-lift h-full">
-          <q-card-section class="bg-purple-1">
-            <div class="text-subtitle2 text-purple-9">Tổng phòng ban</div>
-          </q-card-section>
-          <q-card-section>
-            <div class="text-h4 text-purple-9 q-my-md">
+            <div class="text-h5 text-weight-bold text-purple-9 q-mb-xs">
               {{ stats?.total_departments || 0 }}
             </div>
-            <div class="text-caption text-grey-7 q-mt-md">
-              Phòng ban trong hệ thống
-            </div>
+            <div class="text-caption text-grey-7">Active units</div>
           </q-card-section>
         </q-card>
       </div>
-    </div>
 
-    <!-- Leave Requests Info -->
-    <div class="row q-col-gutter-md q-mb-lg">
-      <div class="col-12 col-md-6">
-        <q-card class="hover-lift">
-          <q-card-section class="bg-red-1">
-            <div class="text-subtitle2 text-red-9">Đơn xin nghỉ phép đang chờ</div>
+      <!-- Total Requests -->
+      <div class="col-12 col-sm-6 col-md-4 col-lg-2">
+        <q-card class="stat-card bg-indigo-50 border-l-4" style="border-left-color: #4f46e5">
+          <q-card-section class="q-pa-md">
+            <div class="row items-center q-mb-md">
+              <div class="col">
+                <div class="text-caption text-weight-medium text-grey-7">Total Requests</div>
+              </div>
+              <div class="col-auto">
+                <q-icon name="description" size="20px" color="indigo-9" />
+              </div>
+            </div>
+            <div class="text-h5 text-weight-bold text-indigo-9 q-mb-xs">
+              {{ (stats?.leave_stats_all_time?.total || 0) }}
+            </div>
+            <div class="text-caption text-grey-7">All time</div>
           </q-card-section>
-          <q-card-section>
-            <div class="text-h4 text-red-9 q-my-md">
+        </q-card>
+      </div>
+
+      <!-- Pending -->
+      <div class="col-12 col-sm-6 col-md-4 col-lg-2">
+        <q-card class="stat-card bg-amber-50 border-l-4" style="border-left-color: #f59e0b">
+          <q-card-section class="q-pa-md">
+            <div class="row items-center q-mb-md">
+              <div class="col">
+                <div class="text-caption text-weight-medium text-grey-7">Pending</div>
+              </div>
+              <div class="col-auto">
+                <q-icon name="schedule" size="20px" color="amber-9" />
+              </div>
+            </div>
+            <div class="text-h5 text-weight-bold text-amber-9 q-mb-xs">
               {{ stats?.leave_stats_this_month?.pending || 0 }}
             </div>
-            <q-btn
-              flat
-              dense
-              size="sm"
-              color="primary"
-              label="Xem tất cả đơn"
-              :to="{ name: 'leave-requests' }"
-            />
+            <div class="text-caption text-grey-7">Awaiting action</div>
           </q-card-section>
         </q-card>
       </div>
 
-      <div class="col-12 col-md-6">
-        <q-card class="hover-lift">
-          <q-card-section class="bg-teal-1">
-            <div class="text-subtitle2 text-teal-9">Đơn xin nghỉ tháng này</div>
-          </q-card-section>
-          <q-card-section>
-            <div class="text-h4 text-teal-9 q-my-md">
+      <!-- Approved -->
+      <div class="col-12 col-sm-6 col-md-4 col-lg-2">
+        <q-card class="stat-card bg-emerald-50 border-l-4" style="border-left-color: #10b981">
+          <q-card-section class="q-pa-md">
+            <div class="row items-center q-mb-md">
+              <div class="col">
+                <div class="text-caption text-weight-medium text-grey-7">Approved</div>
+              </div>
+              <div class="col-auto">
+                <q-icon name="check_circle" size="20px" color="green-9" />
+              </div>
+            </div>
+            <div class="text-h5 text-weight-bold text-green-9 q-mb-xs">
               {{ stats?.leave_stats_this_month?.approved || 0 }}
             </div>
-            <div class="text-caption text-grey-7 q-mt-md">
-              Số đơn được duyệt trong tháng
+            <div class="text-caption text-grey-7">Completed</div>
+          </q-card-section>
+        </q-card>
+      </div>
+
+      <!-- Rejected -->
+      <div class="col-12 col-sm-6 col-md-4 col-lg-2">
+        <q-card class="stat-card bg-red-50 border-l-4" style="border-left-color: #ef4444">
+          <q-card-section class="q-pa-md">
+            <div class="row items-center q-mb-md">
+              <div class="col">
+                <div class="text-caption text-weight-medium text-grey-7">Rejected</div>
+              </div>
+              <div class="col-auto">
+                <q-icon name="cancel" size="20px" color="red-9" />
+              </div>
+            </div>
+            <div class="text-h5 text-weight-bold text-red-9 q-mb-xs">
+              {{ stats?.leave_stats_this_month?.rejected || 0 }}
+            </div>
+            <div class="text-caption text-grey-7">Declined</div>
+          </q-card-section>
+        </q-card>
+      </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="row q-col-gutter-lg q-mb-lg">
+      <!-- Employee Distribution by Department - Bar Chart -->
+      <div class="col-12 col-lg-8">
+        <q-card>
+          <q-card-section>
+            <div class="text-h6 q-mb-md">Employee Distribution by Department</div>
+            <div style="position: relative; height: 300px; width: 100%">
+              <Bar :data="departmentChartData" :options="chartOptions.bar" />
+            </div>
+          </q-card-section>
+        </q-card>
+      </div>
+
+      <!-- Request Status - Pie Chart -->
+      <div class="col-12 col-lg-4">
+        <q-card>
+          <q-card-section>
+            <div class="text-h6 q-mb-md">Request Status</div>
+            <div style="position: relative; height: 300px; width: 100%">
+              <Pie :data="statusChartData" :options="chartOptions.pie" />
             </div>
           </q-card-section>
         </q-card>
       </div>
     </div>
 
-    <!-- Main Content Tabs -->
+    <!-- Additional Charts -->
+    <div class="row q-col-gutter-lg q-mb-lg">
+      <!-- Request Types - Horizontal Bar Chart -->
+      <div class="col-12 col-lg-6">
+        <q-card>
+          <q-card-section>
+            <div class="text-h6 q-mb-md">Request Types</div>
+            <div style="position: relative; height: 250px; width: 100%">
+              <Bar :data="requestTypesChartData" :options="chartOptions.barHorizontal" />
+            </div>
+          </q-card-section>
+        </q-card>
+      </div>
+
+      <!-- Leave Stats This Month -->
+      <div class="col-12 col-lg-6">
+        <q-card>
+          <q-card-section>
+            <div class="text-h6 q-mb-md">Leave Stats This Month</div>
+            <div style="position: relative; height: 250px; width: 100%">
+              <Bar :data="monthlyStatsChartData" :options="chartOptions.bar" />
+            </div>
+          </q-card-section>
+        </q-card>
+      </div>
+    </div>
+
+    <!-- Recent Activities Card -->
     <q-card>
-      <q-tabs
-        v-model="selectedTab"
-        dense
-        class="text-grey-8"
-        active-color="primary"
-        indicator-color="primary"
-        align="left"
-      >
-        <q-tab name="overview" label="Tổng quan" icon="dashboard" />
-        <q-tab name="employees" label="Nhân viên" icon="people" />
-        <q-tab name="departments" label="Phòng ban" icon="domain" />
-        <q-tab name="leave-requests" label="Đơn xin nghỉ phép" icon="event_note" />
-      </q-tabs>
-
-      <q-tab-panels v-model="selectedTab" animated>
-        <!-- Overview Tab -->
-        <q-tab-panel name="overview" class="q-pa-lg">
-          <div class="row q-col-gutter-lg">
-            <!-- Department Distribution Chart -->
-            <div class="col-12 col-lg-6">
-              <q-card flat bordered>
-                <q-card-section>
-                  <div class="text-h6 q-mb-md">Phân bố nhân viên theo phòng ban</div>
-                  <div class="q-mt-md">
-                    <div
-                      v-for="dept in stats?.headcount_by_department"
-                      :key="dept.department_id"
-                      class="q-mb-md"
-                    >
-                      <div class="row items-center q-mb-xs">
-                        <div class="col">
-                          <span class="text-subtitle2">{{ dept.department_name }}</span>
-                        </div>
-                        <div class="col-auto">
-                          <span class="text-bold">{{ dept.total }}</span>
-                          <!-- FIX: dept.active → dept.working -->
-                          <span class="text-caption text-grey-7 q-ml-xs">
-                            ({{ dept.working }} đang làm việc)
-                          </span>
-                        </div>
-                      </div>
-                      <q-linear-progress
-                        :value="dept.total / (stats?.total_employees || 1)"
-                        color="primary"
-                        size="12px"
-                      />
-                    </div>
-                  </div>
-                </q-card-section>
-              </q-card>
-            </div>
-
-            <!-- Quick Actions -->
-            <div class="col-12 col-lg-6">
-              <q-card flat bordered>
-                <q-card-section>
-                  <div class="text-h6 q-mb-md">Thao tác nhanh</div>
-                  <div class="column q-gutter-md">
-                    <q-btn
-                      outline
-                      color="primary"
-                      label="Tạo nhân viên mới"
-                      icon="add_circle"
-                      :to="{ name: 'employees' }"
-                    />
-                    <q-btn
-                      outline
-                      color="primary"
-                      label="Tạo phòng ban mới"
-                      icon="add_circle"
-                      :to="{ name: 'departments' }"
-                    />
-                    <q-btn
-                      outline
-                      color="primary"
-                      label="Duyệt đơn xin nghỉ phép"
-                      icon="check_circle"
-                      :to="{ name: 'leave-requests' }"
-                    />
-                    <q-btn
-                      outline
-                      color="primary"
-                      label="Xem nhật ký hoạt động"
-                      icon="history"
-                      :to="{ name: 'audit-logs' }"
-                    />
-                  </div>
-                </q-card-section>
-              </q-card>
-            </div>
+      <q-card-section>
+        <div class="row items-center q-mb-md">
+          <div class="col">
+            <div class="text-h6 q-my-none">Recent Activities</div>
           </div>
-
-          <!-- Leave stats tháng này -->
-          <q-card class="q-mt-lg">
-            <q-card-section>
-              <div class="text-h6 q-mb-md">Thống kê nghỉ phép tháng này</div>
-              <div class="row q-col-gutter-md">
-                <div class="col-6 col-sm-3">
-                  <div class="text-caption text-grey-7">Tổng đơn</div>
-                  <div class="text-h6">{{ stats?.leave_stats_this_month?.total ?? 0 }}</div>
-                </div>
-                <div class="col-6 col-sm-3">
-                  <div class="text-caption text-grey-7">Chờ duyệt</div>
-                  <div class="text-h6 text-orange-9">
-                    {{ stats?.leave_stats_this_month?.pending ?? 0 }}
-                  </div>
-                </div>
-                <div class="col-6 col-sm-3">
-                  <div class="text-caption text-grey-7">Đã duyệt</div>
-                  <div class="text-h6 text-green-9">
-                    {{ stats?.leave_stats_this_month?.approved ?? 0 }}
-                  </div>
-                </div>
-                <div class="col-6 col-sm-3">
-                  <div class="text-caption text-grey-7">Từ chối</div>
-                  <div class="text-h6 text-red-9">
-                    {{ stats?.leave_stats_this_month?.rejected ?? 0 }}
-                  </div>
-                </div>
-              </div>
-            </q-card-section>
-          </q-card>
-        </q-tab-panel>
-
-        <!-- Employees Tab -->
-        <q-tab-panel name="employees" class="q-pa-lg">
-          <div class="row items-center q-mb-md">
-            <div class="col">
-              <h6 class="q-my-none">Quản lý nhân viên</h6>
-            </div>
-            <div class="col-auto">
-              <q-btn
-                color="primary"
-                label="Thêm nhân viên"
-                icon="add"
-                size="sm"
-                :to="{ name: 'employees' }"
-              />
-            </div>
+          <div class="col-auto">
+            <q-icon name="activity" />
           </div>
-          <p class="text-grey-7 text-caption">
-            Quản lý thông tin nhân viên, cập nhật hồ sơ, khóa/mở khóa tài khoản
-          </p>
-          <q-btn
-            flat
-            dense
-            color="primary"
-            label="Đi tới trang quản lý nhân viên"
-            icon="arrow_forward"
-            :to="{ name: 'employees' }"
-          />
-        </q-tab-panel>
-
-        <!-- Departments Tab -->
-        <q-tab-panel name="departments" class="q-pa-lg">
-          <div class="row items-center q-mb-md">
-            <div class="col">
-              <h6 class="q-my-none">Quản lý phòng ban</h6>
-            </div>
-            <div class="col-auto">
-              <q-btn
-                color="primary"
-                label="Thêm phòng ban"
-                icon="add"
-                size="sm"
-                :to="{ name: 'departments' }"
-              />
-            </div>
-          </div>
-          <p class="text-grey-7 text-caption">
-            Quản lý cấu trúc phòng ban, gán manager, xem cây tổ chức
-          </p>
-          <q-btn
-            flat
-            dense
-            color="primary"
-            label="Đi tới trang quản lý phòng ban"
-            icon="arrow_forward"
-            :to="{ name: 'departments' }"
-          />
-        </q-tab-panel>
-
-        <!-- Leave Requests Tab -->
-        <q-tab-panel name="leave-requests" class="q-pa-lg">
-          <div class="row items-center q-mb-md">
-            <div class="col">
-              <h6 class="q-my-none">Quản lý đơn xin nghỉ phép</h6>
-            </div>
-          </div>
-          <p class="text-grey-7 text-caption">
-            Duyệt hoặc từ chối đơn xin nghỉ phép, xem lịch sử
-          </p>
-          <q-btn
-            flat
-            dense
-            color="primary"
-            label="Đi tới trang quản lý đơn xin nghỉ phép"
-            icon="arrow_forward"
-            :to="{ name: 'leave-requests' }"
-          />
-        </q-tab-panel>
-      </q-tab-panels>
+        </div>
+        <q-separator />
+      </q-card-section>
+      <q-list separator>
+        <q-item
+          v-for="(activity, index) in recentActivities"
+          :key="index"
+          class="q-py-md"
+        >
+          <q-item-section avatar>
+            <q-badge :label="activity.action" :color="getActionColor(activity.action)" />
+          </q-item-section>
+          <q-item-section>
+            <q-item-label caption>{{ activity.details }}</q-item-label>
+            <q-item-label caption class="text-grey-7">
+              {{ formatDate(activity.timestamp) }}
+            </q-item-label>
+          </q-item-section>
+        </q-item>
+        <q-item v-if="recentActivities.length === 0">
+          <q-item-section>
+            <q-item-label caption>No recent activities</q-item-label>
+          </q-item-section>
+        </q-item>
+      </q-list>
     </q-card>
   </q-page>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useAlert } from 'src/composables/useAlert';
 import { dashboardApi } from 'src/api';
 import type { AdminDashboardStats, ManagerDashboardStats } from 'src/types/api.types';
+import { Bar, Pie } from 'vue-chartjs';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend,
+);
 
 const { error } = useAlert();
 const loading = ref(false);
-const selectedTab = ref('overview');
 const stats = ref<AdminDashboardStats | null>(null);
+
+// Chart options
+const chartOptions = {
+  bar: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: false,
+      },
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+      },
+    },
+  },
+  barHorizontal: {
+    indexAxis: 'y' as const,
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: false,
+      },
+    },
+    scales: {
+      x: {
+        beginAtZero: true,
+      },
+    },
+  },
+  pie: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'bottom' as const,
+      },
+    },
+  },
+};
+
+// Department Distribution Chart Data
+const departmentChartData = computed(() => ({
+  labels: (stats.value?.headcount_by_department || []).map(d => d.department_name),
+  datasets: [
+    {
+      label: 'Employees',
+      data: (stats.value?.headcount_by_department || []).map(d => d.total),
+      backgroundColor: '#2563eb',
+      borderRadius: 4,
+    },
+  ],
+}));
+
+// Request Status Pie Chart Data
+const statusChartData = computed(() => {
+  const statuses = [
+    {
+      name: 'Pending',
+      value: stats.value?.leave_stats_this_month?.pending || 0,
+      color: '#f59e0b',
+    },
+    {
+      name: 'Approved',
+      value: stats.value?.leave_stats_this_month?.approved || 0,
+      color: '#10b981',
+    },
+    {
+      name: 'Rejected',
+      value: stats.value?.leave_stats_this_month?.rejected || 0,
+      color: '#ef4444',
+    },
+    {
+      name: 'Cancelled',
+      value: stats.value?.leave_stats_this_month?.cancelled || 0,
+      color: '#6b7280',
+    },
+  ].filter(s => s.value > 0);
+
+  return {
+    labels: statuses.map(s => s.name),
+    datasets: [
+      {
+        data: statuses.map(s => s.value),
+        backgroundColor: statuses.map(s => s.color),
+        borderColor: '#fff',
+        borderWidth: 2,
+      },
+    ],
+  };
+});
+
+// Request Types Chart Data (top 6 types)
+const requestTypesChartData = computed(() => {
+  const typeMap: Record<string, number> = {};
+
+  // Group requests by type (this would come from API in real scenario)
+  const types = [
+    'Annual Leave',
+    'Sick Leave',
+    'Unpaid Leave',
+    'Maternity Leave',
+    'Work From Home',
+    'Other',
+  ];
+
+  return {
+    labels: types,
+    datasets: [
+      {
+        label: 'Requests',
+        data: types.map(() => Math.floor(Math.random() * 20) + 5), // Placeholder
+        backgroundColor: '#818cf8',
+        borderRadius: 4,
+      },
+    ],
+  };
+});
+
+// Monthly Stats Chart Data
+const monthlyStatsChartData = computed(() => ({
+  labels: ['Total', 'Pending', 'Approved', 'Rejected'],
+  datasets: [
+    {
+      label: 'Requests This Month',
+      data: [
+        stats.value?.leave_stats_this_month?.total || 0,
+        stats.value?.leave_stats_this_month?.pending || 0,
+        stats.value?.leave_stats_this_month?.approved || 0,
+        stats.value?.leave_stats_this_month?.rejected || 0,
+      ],
+      backgroundColor: ['#3b82f6', '#f59e0b', '#10b981', '#ef4444'],
+      borderRadius: 4,
+    },
+  ],
+}));
+
+// Recent activities - placeholder data
+const recentActivities = computed(() => [
+  {
+    action: 'CREATE',
+    details: 'New employee created: John Doe',
+    timestamp: new Date().toISOString(),
+  },
+  {
+    action: 'APPROVE',
+    details: 'Leave request approved for Jane Smith',
+    timestamp: new Date(Date.now() - 3600000).toISOString(),
+  },
+  {
+    action: 'UPDATE',
+    details: 'Department information updated: Engineering',
+    timestamp: new Date(Date.now() - 7200000).toISOString(),
+  },
+]);
 
 function isAdminStats(
   data: AdminDashboardStats | ManagerDashboardStats,
@@ -364,18 +436,37 @@ function isAdminStats(
   return 'total_departments' in data;
 }
 
+function getActionColor(action: string): string {
+  const colors: Record<string, string> = {
+    CREATE: 'green',
+    UPDATE: 'blue',
+    DELETE: 'red',
+    APPROVE: 'green',
+    REJECT: 'red',
+    LOGIN: 'grey',
+    LOGOUT: 'grey',
+    CANCEL: 'orange',
+    ASSIGN: 'purple',
+  };
+  return colors[action] || 'grey';
+}
+
+function formatDate(timestamp: string): string {
+  return new Date(timestamp).toLocaleString();
+}
+
 async function loadDashboardData(): Promise<void> {
   loading.value = true;
   try {
     const data = await dashboardApi.getStats();
     if (!isAdminStats(data)) {
-      error('Không có quyền xem dashboard admin');
+      error('You do not have permission to view the admin dashboard');
       return;
     }
     stats.value = data;
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Lỗi không xác định';
-    error(`Không thể tải dữ liệu dashboard: ${message}`);
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    error(`Failed to load dashboard data: ${message}`);
   } finally {
     loading.value = false;
   }
@@ -387,12 +478,72 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.h-full {
-  height: 100%;
+.page-container {
+  background-color: #f9fafb;
 }
 
-.q-card {
+.stat-card {
   border-radius: 8px;
+  transition: all 0.3s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.bg-blue-50 {
+  background-color: #eff6ff;
+}
+
+.bg-purple-50 {
+  background-color: #faf5ff;
+}
+
+.bg-indigo-50 {
+  background-color: #eef2ff;
+}
+
+.bg-amber-50 {
+  background-color: #fffbeb;
+}
+
+.bg-emerald-50 {
+  background-color: #f0fdf4;
+}
+
+.bg-red-50 {
+  background-color: #fef2f2;
+}
+
+.text-blue-9 {
+  color: #1e40af;
+}
+
+.text-purple-9 {
+  color: #6b21a8;
+}
+
+.text-indigo-9 {
+  color: #3730a3;
+}
+
+.text-amber-9 {
+  color: #92400e;
+}
+
+.text-green-9 {
+  color: #15803d;
+}
+
+.text-red-9 {
+  color: #991b1b;
+}
+
+q-card {
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 @media (max-width: 599px) {

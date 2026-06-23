@@ -23,13 +23,22 @@
           <span class="text-capitalize">{{ authStore.user.role }}</span>
         </q-chip>
 
-        <q-btn flat dense icon="logout" label="Đăng xuất" @click="onLogout" />
+        <q-btn 
+          flat 
+          dense 
+          :label="currentLocale === 'en' ? 'EN' : 'VI'"
+          @click="toggleLanguage"
+          class="q-mr-md"
+          :style="{ minWidth: '40px' }"
+        />
+
+        <q-btn flat dense icon="logout" :label="$t('common.logout')" @click="onLogout" />
       </q-toolbar>
     </q-header>
 
     <q-drawer v-model="leftDrawerOpen" show-if-above bordered>
       <q-list padding>
-        <q-item-label header>Menu</q-item-label>
+        <q-item-label header>{{ $t('common.actions') }}</q-item-label>
 
         <q-item
           v-for="item in primaryMenuItems"
@@ -49,7 +58,7 @@
 
         <template v-if="managementMenuItems.length">
           <q-separator class="q-my-sm" />
-          <q-item-label header>Quản lý</q-item-label>
+          <q-item-label header>{{ $t('navigation.management') }}</q-item-label>
 
           <q-item
             v-for="item in managementMenuItems"
@@ -79,14 +88,24 @@
 import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
+import { useI18n } from 'vue-i18n';
 import { useAuthStore } from 'src/stores/auth.store';
 import { getNavItemsForRole } from 'src/composables/useNavigation';
+import { setLocale, getLocale } from 'src/plugins/i18n';
 
 const $q = useQuasar();
 const router = useRouter();
 const authStore = useAuthStore();
+const { locale } = useI18n();
 
 const leftDrawerOpen = ref(false);
+const currentLocale = ref(getLocale());
+
+function toggleLanguage(): void {
+  const newLocale = currentLocale.value === 'en' ? 'vi' : 'en';
+  setLocale(newLocale);
+  currentLocale.value = newLocale;
+}
 
 const primaryMenuItems = computed(() => {
   const names = new Set(['home', 'admin-dashboard', 'manager-dashboard']);
@@ -104,16 +123,16 @@ function toggleLeftDrawer(): void {
 
 function onLogout(): void {
   $q.dialog({
-    title: 'Xác nhận đăng xuất',
-    message: 'Bạn muốn thoát khỏi hệ thống?',
-    ok: { label: 'Đồng ý', color: 'primary' },
-    cancel: { label: 'Không', color: 'grey-8', flat: true },
+    title: 'Confirm Logout',
+    message: 'Are you sure you want to exit the system?',
+    ok: { label: 'Yes', color: 'primary' },
+    cancel: { label: 'No', color: 'grey-8', flat: true },
     persistent: true,
   }).onOk(() => {
     void (async () => {
       try {
         await authStore.logout();
-        $q.notify({ type: 'positive', message: 'Đã đăng xuất' });
+        $q.notify({ type: 'positive', message: 'Logged out successfully' });
       } finally {
         await router.replace({ name: 'login' });
       }

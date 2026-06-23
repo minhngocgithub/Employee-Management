@@ -2,9 +2,9 @@
   <q-page class="q-pa-md page-container">
     <div class="row items-center q-mb-lg">
       <div class="col">
-        <h1 class="text-h4 q-my-none">Manager Dashboard</h1>
+        <h1 class="text-h4 q-my-none">{{ $t('dashboard.managerDashboard') }}</h1>
         <p class="text-subtitle2 text-grey-7 q-mt-xs">
-          Thống kê phòng ban của bạn
+          {{ $t('dashboard.managerDashboardSubtitle') }}
         </p>
       </div>
       <div class="col-auto">
@@ -12,7 +12,7 @@
           flat
           dense
           icon="refresh"
-          label="Tải lại"
+          :label="$t('common.reload')"
           :loading="loading"
           @click="loadDashboardData"
         />
@@ -26,7 +26,7 @@
       <div class="col-12 col-sm-6 col-md-4 animate-slide-in-up">
         <q-card class="hover-lift h-full">
           <q-card-section class="bg-blue-1">
-            <div class="text-subtitle2 text-blue-9">Tổng nhân viên</div>
+            <div class="text-subtitle2 text-blue-9">{{ $t('dashboard.totalEmployees') }}</div>
           </q-card-section>
           <q-card-section>
             <div class="text-h4 text-blue-9">{{ stats?.total_employees ?? 0 }}</div>
@@ -38,7 +38,7 @@
       <div class="col-12 col-sm-6 col-md-4 animate-slide-in-up">
         <q-card class="hover-lift h-full">
           <q-card-section class="bg-green-1">
-            <div class="text-subtitle2 text-green-9">Đang làm việc</div>
+            <div class="text-subtitle2 text-green-9">{{ $t('dashboard.working') }}</div>
           </q-card-section>
           <q-card-section>
             <div class="text-h4 text-green-9">{{ stats?.working_employees ?? 0 }}</div>
@@ -54,7 +54,7 @@
       <div class="col-12 col-sm-6 col-md-4 animate-slide-in-up">
         <q-card class="hover-lift h-full">
           <q-card-section class="bg-red-1">
-            <div class="text-subtitle2 text-red-9">Đơn chờ duyệt</div>
+            <div class="text-subtitle2 text-red-9">{{ $t('dashboard.awaitingAction') }}</div>
           </q-card-section>
           <q-card-section>
             <div class="text-h4 text-red-9">{{ stats?.pending_reviews ?? 0 }}</div>
@@ -63,7 +63,7 @@
               dense
               size="sm"
               color="primary"
-              label="Duyệt đơn"
+              :label="$t('leaveRequests.approve')"
               class="q-mt-sm"
               :to="{ name: 'leave-requests' }"
             />
