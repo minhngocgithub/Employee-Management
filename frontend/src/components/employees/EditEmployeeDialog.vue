@@ -107,7 +107,6 @@ const form = ref<EditEmployeeForm>({
     date_of_birth: props.employee.date_of_birth
         ? props.employee.date_of_birth.slice(0, 10)
         : '',
-    gender: props.employee.gender,
     address: props.employee.address ?? '',
     department_id: props.employee.department_id,
     position: props.employee.position ?? '',

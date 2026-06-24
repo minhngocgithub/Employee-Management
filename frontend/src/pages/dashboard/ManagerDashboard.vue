@@ -34,6 +34,7 @@
         </q-card>
       </div>
 
+      <!-- FIX: active_employees → working_employees -->
       <div class="col-12 col-sm-6 col-md-4 animate-slide-in-up">
         <q-card class="hover-lift h-full">
           <q-card-section class="bg-green-1">

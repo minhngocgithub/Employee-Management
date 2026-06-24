@@ -167,6 +167,13 @@ const canCreateEmployee = computed(() => authStore.role !== 'manager');
 
 const filterStatus = ref<EmployeeStatus | 'all' | undefined>(undefined);
 
+const statusOptions = [
+  { label: 'Đang làm việc', value: 'working' },
+  { label: 'Nghỉ hưu',      value: 'retired' },
+  { label: 'Nghỉ việc',     value: 'resigned' },
+  { label: 'Tất cả',        value: 'all' },
+];
+
 const pagination = ref({
   sortBy: null,
   descending: false,
@@ -212,11 +219,20 @@ const columns = [
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function statusColor(status: EmployeeStatus): string {
-  return getEmployeeStatusColor(status);
+  switch (status) {
+    case 'working':  return 'green';
+    case 'retired':  return 'blue';
+    case 'resigned': return 'orange';
+    default:         return 'grey';
+  }
 }
 
 function statusLabel(status: EmployeeStatus): string {
-  return getEmployeeStatusLabel(status);
+  switch (status) {
+    case 'working':  return 'Đang làm việc';
+    case 'retired':  return 'Nghỉ hưu';
+    case 'resigned': return 'Nghỉ việc';
+    default:         return 'Chưa kích hoạt';
   }
 }
 
